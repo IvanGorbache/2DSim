@@ -43,24 +43,15 @@ def print_grid(grid):
     print(output)
 
 def grid_seed(grid,x,y):
-    cloverleaf = [  "000101000",
-                    "011101110",
-                    "100010001",
-                    "101000101",
-                    "011010110",
-                    "000000000",
-                    "011010110",
-                    "101000101",
-                    "100010001",
-                    "011101110",
-                    "000101000"]
+    f = open("canoe.txt")
+    pattern = f.read().splitlines()
 
-    if len(grid)<len(cloverleaf)+x or len(grid[0])<len(cloverleaf[0])+y:
+    if len(grid)<len(pattern)+x or len(grid[0])<len(pattern[0])+y:
         print("Couldn't load chosen seed. Please increase grid size.")
     else:
-        for i in range(len(cloverleaf)):
-            for j in range(len(cloverleaf[i])):
-                if cloverleaf[i][j]=='1':
+        for i in range(len(pattern)):
+            for j in range(len(pattern[i])):
+                if pattern[i][j]=='1':
                     grid[x][y+j]=1
                 else:
                     grid[x][y+j]=0
@@ -68,3 +59,5 @@ def grid_seed(grid,x,y):
 
 if __name__ == '__main__':
     start_sim(42, 42, 10)
+    start_sim(42, 42, 10)
+
