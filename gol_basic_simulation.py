@@ -43,7 +43,7 @@ def print_grid(grid):
     print(output)
 
 def grid_seed(grid,x,y):
-    f = open("canoe.txt")
+    f = open("hammerhead.txt")
     pattern = f.read().splitlines()
 
     if len(grid)<len(pattern)+x or len(grid[0])<len(pattern[0])+y:
