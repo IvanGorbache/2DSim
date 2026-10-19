@@ -1,9 +1,12 @@
+import time
+
+
 def start_sim(height, width, steps):
     grid = [[0 for _ in range(width)] for _ in range(height)]
     grid_seed(grid, 3,3)
     print_grid(grid)
     for i in range(steps):
-        print("step: ",i)
+        print("step: ", i)
         update(grid)
         print_grid(grid)
 
@@ -32,13 +35,15 @@ def update(grid):
             grid[i][j]+=updateGrid[i][j]
 
 def print_grid(grid):
+    output=""
     for i in range(len(grid)):
         for j in range(len(grid[i])):
             if grid[i][j]==1:
-                print("■",end="")
+                output+="■"
             else:
-                print("□",end="")
-        print("")
+                output+="□"
+        output += "\n"
+    print(output)
 
 def grid_seed(grid,x,y):
     cloverleaf = [  "000101000",
