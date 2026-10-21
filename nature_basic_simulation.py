@@ -2,54 +2,85 @@ import yaml
 
 import entities
 from entities import Entity
+import random
 
 
 def run_simulation():
     seed_loader()
-    grid = [[[0] for _ in range(20)] for _ in range(20)]
-    harbs = [entities.Herbivore((2,4),10,5,5),
-             entities.Herbivore((6, 3), 10, 5, 5),
-             entities.Herbivore((12, 9), 10, 5, 5),
-             entities.Herbivore((11, 1), 10, 5, 5)
+
+    harbs = [entities.Herbivore((2,2),10,10,5),
              ]
-    preds = [entities.Predator((4,8),5,8),
-             entities.Predator((5, 6), 5, 8),
-             entities.Predator((6, 4), 5, 8),
-             entities.Predator((2, 7), 5, 8)
+    preds = [entities.Predator((2,0),10,10)
              ]
 
-    plants = [entities.Plant((6,2),10),
-              entities.Plant((0, 4), 10),
-              entities.Plant((7, 1), 10),
-              entities.Plant((3, 6), 10)
+    plants = [entities.Plant((1,1),10),
+              entities.Plant((1, 2), 10),
+              entities.Plant((2, 1), 10)
               ]
-    for i in range(10):
-        print("step ",i)
-        for plant in plants:
-            plant.tick()
-            if plant.t_steps>=0:
-                grid[plant.position[0]][plant.position[1]].append(plant)
-        for plant in harbs:
-            plant.tick()
-            if plant.t_steps>=0:
-                grid[plant.position[0]][plant.position[1]].append(plant)
-        for plant in preds:
-            plant.tick()
-            if plant.t_steps>=0:
-                grid[plant.position[0]][plant.position[1]].append(plant)
+    grid = [[[] for _ in range(3)] for _ in range(3)]
+    place_on_grid(grid, harbs)
+    place_on_grid(grid, preds)
+    place_on_grid(grid, plants)
+    print_grid(grid)
 
-        for plant in harbs:
-            plant.move(grid)
-        for plant in preds:
-            plant.move(grid)
+    for i in range(30):
+        print("step ",i)
+        move_on_grid(grid,preds,harbs)
+        move_on_grid(grid,harbs,plants)
+        trampled_by(grid,plants)
+
+        grid = [[[] for _ in range(3)] for _ in range(3)]
+
+        place_on_grid(grid,harbs)
+        place_on_grid(grid,preds)
+        place_on_grid(grid,plants)
 
         print_grid(grid)
+        #plant_random(grid,plants)
+
+
+
+def plant_random(grid, plants):
+    positions = [(x,y) for x in range(len(grid)) for y in range(len(grid[0]))]
+    random.shuffle(positions)
+    for position in positions:
+        if len(grid[position[0]][position[1]])==0:
+            plants.append(entities.Plant(position,10))
+            break
+
+
+def place_on_grid(grid, entity_list):
+    for entity in entity_list:
+        entity.tick()
+        if entity.t_steps<=0:
+            entity_list.remove(entity)
+            continue
+        grid[entity.position[0]][entity.position[1]].append(entity)
+
+def move_on_grid(grid, entity_list, target_entity_list):
+    for entity in entity_list:
+
+        entity.move(grid)
+        target = next((ent for ent in grid[entity.position[0]][entity.position[1]] if isinstance(ent,entity.target_type)),None)
+        if target is not None:
+            target_entity_list.remove(target)
+            entity.t_steps = entity.max_t_steps
+
+
+def trampled_by(grid, plants):
+    for plant in plants:
+        pred = next((ent for ent in grid[plant.position[0]][plant.position[1]] if isinstance(ent,entities.Predator)),None)
+        if pred is not None:
+            plants.remove(plant)
+
+def reporduction(grid):
+    pass
 
 def print_grid(grid):
     for i in range(len(grid)):
         for j in range(len(grid[0])):
-            if len(grid[i][j])>1:
-                print(grid[i][j][1].sprite,end="")
+            if len(grid[i][j])>0:
+                print(grid[i][j][0].sprite,end="")
             else:
                 print("🟫",end="")
         print("")
