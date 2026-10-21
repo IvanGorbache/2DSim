@@ -8,11 +8,11 @@ import random
 def run_simulation():
     seed_loader()
 
-    harbs = [entities.Herbivore((2, 2), 10, 10, 5),
-             entities.Herbivore((2, 2), 10, 10, 5)
+    harbs = [entities.Herbivore((2, 2), 3, 10, 10),
+             entities.Herbivore((2, 2), 3, 10, 10)
              ]
-    preds = [entities.Predator((2, 0), 10, 10)
-             ]
+    preds = [
+    ]
 
     plants = [entities.Plant((1, 1), 10),
               entities.Plant((1, 2), 10),
@@ -24,12 +24,12 @@ def run_simulation():
     place_on_grid(grid, plants)
     print_grid(grid)
 
-    for i in range(30):
+    for i in range(50):
         print("step ", i)
         move_on_grid(grid, preds, harbs)
         move_on_grid(grid, harbs, plants)
         trampled_by(grid, plants)
-
+        reproduce(grid, harbs)
         grid = [[[] for _ in range(3)] for _ in range(3)]
 
         place_on_grid(grid, harbs)
@@ -83,13 +83,20 @@ def reproduce(grid, entity_list):
     for entity in entity_list:
         target = next((ent for ent in grid[entity.position[0]][entity.position[1]] if isinstance(ent, type(entity))),
                       None)
-        if target is not None:
+        if (target is not None and entity.t_cooldown >= entity.max_cooldown and entity.t_cooldown >=
+                target.max_cooldown):
             entity.t_cooldown = 0
             target.t_cooldown = 0
             neighborhood = [(1, 1), (1, 0), (1, -1), (0, 1), (0, -1), (-1, 1), (-1, 0)]
             random.shuffle(neighborhood)
             for neighbor in neighborhood:
                 new_position = entities.add_cords(neighbor, entity.position)
+                if (0 <= new_position[0] < len(grid) and 0 <= new_position[1] < len(grid[0])
+                        and not grid[new_position[0]][new_position[1]]):
+                    new_entity = entities.Herbivore(new_position, 10, 10, 5)
+                    grid[new_position[0]][new_position[1]].append(new_entity)
+                    entity_list.append(new_entity)
+                    break
 
 
 def print_grid(grid):
