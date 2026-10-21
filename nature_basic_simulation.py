@@ -9,14 +9,12 @@ def run_simulation():
     seed_loader()
 
     harbs = [entities.Herbivore((2, 2), 3, 10, 10),
-             entities.Herbivore((2, 2), 3, 10, 10)
-             ]
-    preds = [
-    ]
 
-    plants = [entities.Plant((1, 1), 10),
-              entities.Plant((1, 2), 10),
-              entities.Plant((2, 1), 10)
+             ]
+    preds = [entities.Predator((0, 0), 10, 10)
+             ]
+
+    plants = [
               ]
     grid = [[[] for _ in range(3)] for _ in range(3)]
     place_on_grid(grid, harbs)
@@ -30,6 +28,10 @@ def run_simulation():
         move_on_grid(grid, harbs, plants)
         trampled_by(grid, plants)
         reproduce(grid, harbs)
+        tick_entity(grid, plants)
+        tick_entity(grid, harbs)
+        tick_entity(grid, preds)
+        #plant_random(grid, plants)
         grid = [[[] for _ in range(3)] for _ in range(3)]
 
         place_on_grid(grid, harbs)
@@ -37,7 +39,8 @@ def run_simulation():
         place_on_grid(grid, plants)
 
         print_grid(grid)
-        #plant_random(grid,plants)
+
+
 
 
 def plant_random(grid, plants):
@@ -49,12 +52,17 @@ def plant_random(grid, plants):
             break
 
 
-def place_on_grid(grid, entity_list):
+def tick_entity(grid, entity_list):
     for entity in entity_list:
         entity.tick()
         if entity.t_steps <= 0:
+            grid[entity.position[0]][entity.position[1]].remove(entity)
             entity_list.remove(entity)
-            continue
+
+
+
+def place_on_grid(grid, entity_list):
+    for entity in entity_list:
         grid[entity.position[0]][entity.position[1]].append(entity)
 
 
