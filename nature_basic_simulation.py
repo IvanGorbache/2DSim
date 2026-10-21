@@ -16,134 +16,147 @@ class Simulation:
         self.T_cooldown = T_cooldown
         self.T_predator = T_predator
         self.R_predator_sight = R_predator_sight
+        self.predator_entities = []
+        self.herbivore_entities = []
+        self.plant_entities = []
+        self.static_entities = []
+        self.all_entities = {entities.StaticEntity: self.static_entities,
+                             entities.Predator: self.predator_entities,
+                             entities.Herbivore: self.herbivore_entities,
+                             entities.Plant: self.plant_entities
+                             }
+        self.grid = [[[] for _ in range(self.grid_size[0])] for _ in range(self.grid_size[1])]
+
+    def place_entities(self):
+        for entity_list in self.all_entities.values():
+            for entity in entity_list:
+                self.grid[entity.position[0]][entity.position[1]].append(entity)
+
+    def clear_grid(self):
+        self.grid = [[[] for _ in range(self.grid_size[0])] for _ in range(self.grid_size[1])]
+
+    def print_grid(self):
+        for i in range(self.grid_size[0]):
+            for j in range(self.grid_size[1]):
+                if len(self.grid[i][j]) > 0:
+                    print(self.grid[i][j][0].sprite, end="")
+                else:
+                    print("🟫", end="")
+            print("")
+
+    def move_entities(self, entity_type):
+        for entity in self.all_entities[entity_type]:
+            target_type = entity.target_type
+            entity.move(self.grid)
+
+            target = list(
+                ent for ent in self.grid[entity.position[0]][entity.position[1]] if isinstance(ent, target_type))
+
+            if len(target) > 0:
+                self.all_entities[target_type].remove(target[0])
+                self.grid[entity.position[0]][entity.position[1]].remove(target[0])
+                entity.t_steps = entity.max_t_steps
+
+    def tick_entity(self, entity_type):
+        for entity in self.all_entities[entity_type]:
+            entity.tick()
+            if entity.t_steps <= 0:
+                self.all_entities[entity_type].remove(entity)
+
+    def plant_random(self):
+        positions = [(x, y) for x in range(len(self.grid)) for y in range(len(self.grid[0]))]
+        random.shuffle(positions)
+        for position in positions:
+            if len(self.grid[position[0]][position[1]]) == 0:
+                self.all_entities[entities.Plant].append(entities.Plant(position, self.T_plant))
+                break
+
+    def reproduce(self):
+        for entity in self.herbivore_entities:
+            target = next(
+                (ent for ent in self.grid[entity.position[0]][entity.position[1]] if isinstance(ent, type(entity))),
+                None)
+            if (target is not None and entity.t_cooldown >= entity.max_cooldown and entity.t_cooldown >=
+                    target.max_cooldown):
+                entity.t_cooldown = 0
+                target.t_cooldown = 0
+                neighborhood = [(1, 1), (1, 0), (1, -1), (0, 1), (0, -1), (-1, 1), (-1, 0)]
+                random.shuffle(neighborhood)
+                for neighbor in neighborhood:
+
+                    new_position = entities.add_cords(neighbor, entity.position)
+                    if (0 <= new_position[0] < len(self.grid) and 0 <= new_position[1] < len(self.grid[0])
+                            and not self.grid[new_position[0]][new_position[1]] and not any(
+                                isinstance(ent, entities.StaticEntity) for ent in
+                                self.grid[new_position[0]][new_position[1]])):
+                        new_entity = entities.Herbivore(new_position, self.T_herbivore, self.R_herbivore_sight,
+                                                        self.T_cooldown)
+                        self.grid[new_position[0]][new_position[1]].append(new_entity)
+                        self.herbivore_entities.append(new_entity)
+                        break
+
+    def trampled_by(self):
+        for plant in self.plant_entities:
+            pred = next(
+                (ent for ent in self.grid[plant.position[0]][plant.position[1]] if isinstance(ent, entities.Predator)),
+                None)
+            if pred is not None:
+                self.plant_entities.remove(plant)
 
 
 def run_simulation():
     simulator = seed_loader()
 
-    harbs = [entities.Herbivore((2, 2), simulator.T_herbivore, simulator.R_herbivore_sight, simulator.T_cooldown),
-
-             ]
-    preds = [entities.Predator((0, 0), simulator.T_predator, simulator.R_predator_sight),
-             ]
-
-    plants = [entities.Plant((1, 1), simulator.T_plant),
-              entities.Plant((2, 1), simulator.T_plant),
-              ]
-
-    static_obj = [entities.StaticEntity((0, 2))]
-    grid = [[[] for _ in range(simulator.grid_size[0])] for _ in range(simulator.grid_size[1])]
-    place_on_grid(grid, harbs)
-    place_on_grid(grid, preds)
-    place_on_grid(grid, plants)
-    place_on_grid(grid, static_obj)
-    print_grid(grid)
-
+    simulator.place_entities()
+    simulator.print_grid()
     for i in range(simulator.steps):
         print("step ", i)
-        move_on_grid(grid, preds, harbs)
-        move_on_grid(grid, harbs, plants)
-        trampled_by(grid, plants)
-        reproduce(grid, harbs)
-        tick_entity(grid, plants)
-        tick_entity(grid, harbs)
-        tick_entity(grid, preds)
-        plant_random(grid, plants)
-        grid = [[[] for _ in range(simulator.grid_size[0])] for _ in range(simulator.grid_size[0])]
+        simulator.move_entities(entities.Predator)
+        simulator.move_entities(entities.Herbivore)
 
-        place_on_grid(grid, harbs)
-        place_on_grid(grid, preds)
-        place_on_grid(grid, plants)
-        place_on_grid(grid, static_obj)
+        simulator.trampled_by()
 
-        print_grid(grid)
+        simulator.reproduce()
 
+        simulator.tick_entity(entities.Predator)
+        simulator.tick_entity(entities.Herbivore)
+        simulator.tick_entity(entities.Plant)
 
-def plant_random(grid, plants):
-    positions = [(x, y) for x in range(len(grid)) for y in range(len(grid[0]))]
-    random.shuffle(positions)
-    for position in positions:
-        if len(grid[position[0]][position[1]]) == 0:
-            plants.append(entities.Plant(position, 10))
-            break
+        simulator.plant_random()
 
+        simulator.clear_grid()
 
-def tick_entity(grid, entity_list):
-    for entity in entity_list:
-        entity.tick()
-        if entity.t_steps <= 0:
-            entity_list.remove(entity)
+        simulator.place_entities()
 
-
-def place_on_grid(grid, entity_list):
-    for entity in entity_list:
-        grid[entity.position[0]][entity.position[1]].append(entity)
-
-
-def move_on_grid(grid, entity_list, target_entity_list):
-    for entity in entity_list:
-        entity.move(grid)
-
-        target = list(
-            ent for ent in grid[entity.position[0]][entity.position[1]] if isinstance(ent, entity.target_type))
-
-        if len(target) > 0:
-            target_entity_list.remove(target[0])
-            grid[entity.position[0]][entity.position[1]].remove(target[0])
-            entity.t_steps = entity.max_t_steps
-
-
-def trampled_by(grid, plants):
-    for plant in plants:
-        pred = next((ent for ent in grid[plant.position[0]][plant.position[1]] if isinstance(ent, entities.Predator)),
-                    None)
-        if pred is not None:
-            plants.remove(plant)
-
-
-def reproduce(grid, entity_list):
-    for entity in entity_list:
-        target = next((ent for ent in grid[entity.position[0]][entity.position[1]] if isinstance(ent, type(entity))),
-                      None)
-        if (target is not None and entity.t_cooldown >= entity.max_cooldown and entity.t_cooldown >=
-                target.max_cooldown):
-            entity.t_cooldown = 0
-            target.t_cooldown = 0
-            neighborhood = [(1, 1), (1, 0), (1, -1), (0, 1), (0, -1), (-1, 1), (-1, 0)]
-            random.shuffle(neighborhood)
-            for neighbor in neighborhood:
-
-                new_position = entities.add_cords(neighbor, entity.position)
-                if (0 <= new_position[0] < len(grid) and 0 <= new_position[1] < len(grid[0])
-                        and not grid[new_position[0]][new_position[1]] and not any(
-                            isinstance(ent, entities.StaticEntity) for ent in grid[new_position[0]][new_position[1]])):
-                    new_entity = entities.Herbivore(new_position, 10, 10, 5)
-                    grid[new_position[0]][new_position[1]].append(new_entity)
-                    entity_list.append(new_entity)
-                    break
-
-
-def print_grid(grid):
-    for i in range(len(grid)):
-        for j in range(len(grid[0])):
-            if len(grid[i][j]) > 0:
-                print(grid[i][j][0].sprite, end="")
-            else:
-                print("🟫", end="")
-        print("")
+        simulator.print_grid()
 
 
 def seed_loader():
     with open(f'config.yaml', 'r') as config:
         output = yaml.safe_load(config)
-    return Simulation([int(x) for x in output.get('grid_size', [1, 1])],
-                      int(output.get('steps', 1)),
-                      int(output.get('T_plant', 1)),
-                      int(output.get('T_herbivore', 1)),
-                      int(output.get('R_herbivore', 1)),
-                      int(output.get('T_cooldown', 1)),
-                      int(output.get('T_predator', 1)),
-                      int(output.get('R_predator_sight', 2)))
+    simulator = Simulation([int(x) for x in output.get('grid_size', [1, 1])],
+                           int(output.get('steps', 1)),
+                           int(output.get('T_plant', 1)),
+                           int(output.get('T_herbivore', 1)),
+                           int(output.get('R_herbivore', 1)),
+                           int(output.get('T_cooldown', 1)),
+                           int(output.get('T_predator', 1)),
+                           int(output.get('R_predator_sight', 2)))
+    for entry in output.get('entities', []):
+        entry_type = entry['type'].lower()
+        position = tuple(int(cord) for cord in entry['position'])
+        if entry_type == 'static':
+            simulator.static_entities.append(entities.StaticEntity(position))
+        elif entry_type == 'predator':
+            simulator.predator_entities.append(
+                entities.Predator(position, simulator.T_predator, simulator.R_predator_sight))
+        elif entry_type == 'herbivore':
+            simulator.herbivore_entities.append(
+                entities.Herbivore(position, simulator.T_herbivore, simulator.R_herbivore_sight, simulator.T_cooldown))
+        elif entry_type == 'plant':
+            simulator.plant_entities.append(entities.Plant(position, simulator.T_plant))
+
+    return simulator
 
 
 if __name__ == '__main__':
