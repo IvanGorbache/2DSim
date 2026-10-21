@@ -97,7 +97,7 @@ class Predator(MobileEntity):
 
 class StaticEntity(Entity):
     def __init__(self, position):
-        super().__init__(('🌲', '🗿')[random.randint(0, 1)], position, 0)
+        super().__init__(('🌲', '🗿', '⛰️')[random.randint(0, 2)], position, 0)
 
 
 def add_cords(cord1, cord2):

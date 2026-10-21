@@ -1,7 +1,5 @@
 import yaml
-
 import entities
-from entities import Entity
 import random
 
 
@@ -72,12 +70,13 @@ class Simulation:
                 break
 
     def reproduce(self):
+        has_reproduced = False
         for entity in self.herbivore_entities:
             target = next(
                 (ent for ent in self.grid[entity.position[0]][entity.position[1]] if isinstance(ent, type(entity))),
                 None)
             if (target is not None and entity.t_cooldown >= entity.max_cooldown and entity.t_cooldown >=
-                    target.max_cooldown):
+                    target.max_cooldown and target is not entity):
                 entity.t_cooldown = 0
                 target.t_cooldown = 0
                 neighborhood = [(1, 1), (1, 0), (1, -1), (0, 1), (0, -1), (-1, 1), (-1, 0)]
@@ -93,7 +92,9 @@ class Simulation:
                                                         self.T_cooldown)
                         self.grid[new_position[0]][new_position[1]].append(new_entity)
                         self.herbivore_entities.append(new_entity)
+                        has_reproduced = True
                         break
+        return has_reproduced
 
     def trampled_by(self):
         for plant in self.plant_entities:
@@ -111,12 +112,11 @@ def run_simulation():
     simulator.print_grid()
     for i in range(simulator.steps):
         print("step ", i)
+
         simulator.move_entities(entities.Predator)
         simulator.move_entities(entities.Herbivore)
-
-        simulator.trampled_by()
-
         simulator.reproduce()
+        simulator.trampled_by()
 
         simulator.tick_entity(entities.Predator)
         simulator.tick_entity(entities.Herbivore)
