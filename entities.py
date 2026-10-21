@@ -41,10 +41,12 @@ class MobileEntity(Entity):
 
         else:
             rand_neighborhood = neighborhood.copy()
+            rand_neighborhood.remove((0, 0))
             random.shuffle(rand_neighborhood)
             for neighbor in rand_neighborhood:
                 new_position = add_cords(neighbor, self.position)
-                if 0 <= new_position[0] < len(grid) and 0 <= new_position[1] < len(grid[0]):
+                if (0 <= new_position[0] < len(grid) and 0 <= new_position[1] < len(grid[0])
+                        and not any(isinstance(ent, StaticEntity) for ent in grid[new_position[0]][new_position[1]])):
                     next_pos = new_position
                     break
         return next_pos
@@ -91,6 +93,12 @@ class Predator(MobileEntity):
     def move(self, grid):
         next_pos = self.get_next_pos(grid)
         self.position = next_pos
+
+
+class StaticEntity(Entity):
+    def __init__(self, position):
+        self.position = position
+        self.sprite = ('🌲', '🗿')[random.randint(0, 1)]
 
 
 def add_cords(cord1, cord2):
