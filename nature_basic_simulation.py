@@ -7,8 +7,10 @@ import random
 import logging
 from abc import ABC, abstractmethod
 import matplotlib
-matplotlib.use('TkAgg') 
+
+matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
+
 logger = logging.getLogger(__name__)
 
 
@@ -52,19 +54,19 @@ class Simulation:
         self.entity_count = []
         self.reproduction_count = []
         self.consumption_count = {
-                             entities.Predator: [],
-                             entities.Herbivore: [],
-                             entities.Omnivore: []
-                             }
+            entities.Predator: [],
+            entities.Herbivore: [],
+            entities.Omnivore: []
+        }
         self.grid_history = []
 
     def log_entity_count(self):
         self.entity_count.append({
-                                  entities.Predator: len(self.predator_entities),
-                                  entities.Herbivore: len(self.herbivore_entities),
-                                  entities.Plant: len(self.plant_entities),
-                                  entities.Omnivore: len(self.omnivore_entities)
-                                  })
+            entities.Predator: len(self.predator_entities),
+            entities.Herbivore: len(self.herbivore_entities),
+            entities.Plant: len(self.plant_entities),
+            entities.Omnivore: len(self.omnivore_entities)
+        })
 
     def add_observer(self, observer):
         self.observers.append(observer)
@@ -156,7 +158,7 @@ class Simulation:
                                                         self.T_cooldown)
                         self.grid[new_position[0]][new_position[1]].append(new_entity)
                         self.herbivore_entities.append(new_entity)
-                        reproduction_count +=1
+                        reproduction_count += 1
                         break
         return reproduction_count
 
@@ -180,7 +182,9 @@ class Simulation:
         plt.tight_layout()
         plt.legend(loc='upper right')
         plt.xlabel('Simulation Steps', fontsize=12)
-        plt.title('Population over time', fontsize=14, fontweight='bold')
+        plt.title('Population over time', fontsize=10)
+        plt.savefig('population.png', dpi=300)
+
         plt.show()
 
     def plot_reproduction_count(self):
@@ -188,7 +192,9 @@ class Simulation:
         plt.plot(self.reproduction_count)
         plt.tight_layout()
         plt.xlabel('Simulation Steps', fontsize=12)
-        plt.title('reproduction over time', fontsize=14, fontweight='bold')
+        plt.title('reproduction over time', fontsize=10)
+        plt.savefig('reproduction.png', dpi=300)
+
         plt.show()
 
     def plot_consumption_count(self):
@@ -200,7 +206,9 @@ class Simulation:
         plt.tight_layout()
         plt.legend(loc='upper right')
         plt.xlabel('Simulation steps', fontsize=12)
-        plt.title('Consumption over time', fontsize=14, fontweight='bold')
+        plt.title('Consumption over time', fontsize=10)
+        plt.savefig('consumption.png', dpi=300)
+
         plt.show()
 
     def plot_grid_heatmap(self):
@@ -212,7 +220,9 @@ class Simulation:
         plt.figure(figsize=(8, 6))
         plt.imshow(heatmap_data, cmap='hot', origin='lower', interpolation='nearest')
         plt.colorbar(label='Traffic')
-        plt.title('Grid traffic', fontsize=14, fontweight='bold')
+        plt.title('Grid traffic', fontsize=10)
+        plt.savefig('traffic_heat.png', dpi=300)
+
         plt.show()
 
 
@@ -248,7 +258,7 @@ def run_simulation():
 
         simulator.log_entity_count()
         simulator.log_reproduction_count(num_reproductions)
-    
+
     simulator.plot_entity_count()
     simulator.plot_reproduction_count()
     simulator.plot_consumption_count()
