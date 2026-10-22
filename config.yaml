@@ -1,0 +1,122 @@
+grid_size: ['40', '40']
+steps: 50
+T_plant: '10'
+T_herbivore: '5'
+R_herbivore_sight: '10'
+T_cooldown: '5'
+T_predator: '20'
+R_predator_sight: '5'
+T_omnivore: '30'
+R_omnivore_sight: '5'
+
+entities:
+  - type: 'herbivore'
+    position: [2, 2]
+  - type: 'herbivore'
+    position: [12, 14]
+  - type: 'herbivore'
+    position: [25, 8]
+  - type: 'herbivore'
+    position: [33, 35]
+  - type: 'herbivore'
+    position: [5, 28]
+  - type: 'herbivore'
+    position: [18, 32]
+  - type: 'herbivore'
+    position: [30, 15]
+  - type: 'herbivore'
+    position: [3, 12]
+  - type: 'herbivore'
+    position: [22, 25]
+  - type: 'herbivore'
+    position: [7, 38]
+  - type: 'herbivore'
+    position: [15, 3]
+  - type: 'herbivore'
+    position: [28, 19]
+  - type: 'herbivore'
+    position: [36, 27]
+  - type: 'herbivore'
+    position: [11, 22]
+  - type: 'herbivore'
+    position: [4, 16]
+  - type: 'herbivore'
+    position: [14, 5]
+  - type: 'herbivore'
+    position: [21, 18]
+  - type: 'herbivore'
+    position: [8, 25]
+  - type: 'herbivore'
+    position: [37, 12]
+  - type: 'herbivore'
+    position: [26, 30]
+
+  - type: 'predator'
+    position: [0, 0]
+  - type: 'predator'
+    position: [20, 20]
+  - type: 'predator'
+    position: [38, 5]
+  - type: 'predator'
+    position: [10, 35]
+  - type: 'predator'
+    position: [5, 10]
+  - type: 'predator'
+    position: [32, 12]
+  - type: 'predator'
+    position: [17, 28]
+  - type: 'predator'
+    position: [25, 33]
+
+  - type: 'omnivore'
+    position: [2, 0]
+  - type: 'omnivore'
+    position: [19, 15]
+  - type: 'omnivore'
+    position: [34, 21]
+  - type: 'omnivore'
+    position: [12, 38]
+  - type: 'omnivore'
+    position: [7, 18]
+
+  - type: 'plant'
+    position: [1, 1]
+  - type: 'plant'
+    position: [2, 1]
+  - type: 'plant'
+    position: [10, 11]
+  - type: 'plant'
+    position: [10, 12]
+  - type: 'plant'
+    position: [15, 25]
+  - type: 'plant'
+    position: [16, 25]
+  - type: 'plant'
+    position: [30, 30]
+  - type: 'plant'
+    position: [31, 30]
+  - type: 'plant'
+    position: [5, 5]
+  - type: 'plant'
+    position: [6, 5]
+  - type: 'plant'
+    position: [22, 12]
+  - type: 'plant'
+    position: [35, 22]
+
+  - type: 'static'
+    position: [0, 2]
+  - type: 'static'
+    position: [14, 14]
+  - type: 'static'
+    position: [22, 5]
+  - type: 'static'
+    position: [35, 12]
+  - type: 'static'
+    position: [8, 30]
+  - type: 'static'
+    position: [3, 20]
+  - type: 'static'
+    position: [28, 38]
+  - type: 'static'
+    position: [19, 10]

@@ -1,0 +1,23 @@
+grid_size: ['3', '3']
+steps: 30
+T_plant: '10'
+T_herbivore: '5'
+R_herbivore_sight: '10'
+T_cooldown: '5'
+T_predator: '20'
+R_predator_sight: '5'
+T_omnivore: '30'
+R_omnivore_sight: '5'
+
+entities:
+
+
+  - type: 'predator'
+    position: [ 0, 0 ]
+
+
+  - type: 'plant'
+    position: [1, 1]
+  - type: 'plant'
+    position: [2, 1]
+
