@@ -1,4 +1,5 @@
 import copy
+import os
 
 import numpy as np
 import yaml
@@ -183,7 +184,8 @@ class Simulation:
         plt.legend(loc='upper right')
         plt.xlabel('Simulation Steps', fontsize=12)
         plt.title('Population over time', fontsize=10)
-        plt.savefig('population.png', dpi=300)
+        output_dir = "plots"
+        plt.savefig(os.path.join(output_dir, "population.png"), dpi=300)
 
         plt.show()
 
@@ -193,7 +195,8 @@ class Simulation:
         plt.tight_layout()
         plt.xlabel('Simulation Steps', fontsize=12)
         plt.title('reproduction over time', fontsize=10)
-        plt.savefig('reproduction.png', dpi=300)
+        output_dir = "plots"
+        plt.savefig(os.path.join(output_dir, "reproduction.png"), dpi=300)
 
         plt.show()
 
@@ -206,8 +209,8 @@ class Simulation:
         plt.tight_layout()
         plt.legend(loc='upper right')
         plt.xlabel('Simulation steps', fontsize=12)
-        plt.title('Consumption over time', fontsize=10)
-        plt.savefig('consumption.png', dpi=300)
+        output_dir = "plots"
+        plt.savefig(os.path.join(output_dir, "consumption.png"), dpi=300)
 
         plt.show()
 
@@ -221,8 +224,8 @@ class Simulation:
         plt.imshow(heatmap_data, cmap='hot', origin='lower', interpolation='nearest')
         plt.colorbar(label='Traffic')
         plt.title('Grid traffic', fontsize=10)
-        plt.savefig('traffic_heat.png', dpi=300)
-
+        output_dir = "plots"
+        plt.savefig(os.path.join(output_dir, "traffic_heat.png"), dpi=300)
         plt.show()
 
 
