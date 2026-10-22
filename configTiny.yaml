@@ -10,8 +10,6 @@ T_omnivore: '30'
 R_omnivore_sight: '5'
 
 entities:
-  - type: 'herbivore'
-    position: [2, 2]
 
 
   - type: 'predator'
@@ -23,6 +21,3 @@ entities:
   - type: 'plant'
     position: [2, 1]
 
-
-  - type: 'omnivore'
-    position: [2, 0]

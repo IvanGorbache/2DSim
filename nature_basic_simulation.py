@@ -1,6 +1,9 @@
 import yaml
 import entities
 import random
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class Simulation:
@@ -55,14 +58,20 @@ class Simulation:
                     ent for ent in self.grid[entity.position[0]][entity.position[1]] if isinstance(ent, target_type))
 
                 if len(target) > 0:
+                    if len(self.all_entities[target_type]) == 1:
+                        logger.info("The last of the "+type(target[0]).__name__+" has been consumed")
                     self.all_entities[target_type].remove(target[0])
                     self.grid[entity.position[0]][entity.position[1]].remove(target[0])
                     entity.t_steps = entity.max_t_steps
+                    if isinstance(entity, entities.Predator):
+                        logger.info("A predator has eaten a herbivore")
 
     def tick_entity(self, entity_type):
         for entity in self.all_entities[entity_type]:
             entity.tick()
             if entity.t_steps <= 0:
+                if len(self.all_entities[entity_type]) == 1:
+                    logger.info("The last of the " + type(entity).__name__ + " has been died of old age")
                 self.all_entities[entity_type].remove(entity)
 
     def plant_random(self):
@@ -72,6 +81,8 @@ class Simulation:
             if len(self.grid[position[0]][position[1]]) == 0:
                 self.all_entities[entities.Plant].append(entities.Plant(position, self.T_plant))
                 break
+        if len(self.plant_entities) > self.grid_size[0] * self.grid_size[1] * 0.9:
+            logger.info("number of plants exceeds 90% of the grid space")
 
     def reproduce(self):
         has_reproduced = False
@@ -106,6 +117,8 @@ class Simulation:
                 (ent for ent in self.grid[plant.position[0]][plant.position[1]] if isinstance(ent, entities.Predator)),
                 None)
             if pred is not None:
+                if len(self.plant_entities) == 1:
+                    logger.info("A predator has trampled the last plant")
                 self.plant_entities.remove(plant)
 
 
@@ -171,4 +184,9 @@ def seed_loader():
 
 
 if __name__ == '__main__':
+    logging.basicConfig(filename='simulation.log', level=logging.INFO)
+    logger.info('Started')
     run_simulation()
+    logger.info('Finished')
+
+
