@@ -6,11 +6,15 @@ R_herbivore_sight: '10'
 T_cooldown: '5'
 T_predator: '20'
 R_predator_sight: '5'
+T_omnivore: '30'
+R_omnivore_sight: '5'
 
 entities:
   - type: 'herbivore'
     position: [2, 2]
-  - type: 'herbivore'
+
+
+  - type: 'predator'
     position: [ 0, 0 ]
 
 
@@ -18,3 +22,7 @@ entities:
     position: [1, 1]
   - type: 'plant'
     position: [2, 1]
+
+
+  - type: 'omnivore'
+    position: [2, 0]

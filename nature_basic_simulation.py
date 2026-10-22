@@ -5,7 +5,7 @@ import random
 
 class Simulation:
     def __init__(self, grid_size, steps, T_plant, T_herbivore, R_herbivore_sight, T_cooldown, T_predator,
-                 R_predator_sight):
+                 R_predator_sight, T_omnivore, R_omnivore_sight):
         self.grid_size = grid_size
         self.steps = steps
         self.T_plant = T_plant
@@ -14,14 +14,18 @@ class Simulation:
         self.T_cooldown = T_cooldown
         self.T_predator = T_predator
         self.R_predator_sight = R_predator_sight
+        self.T_omnivore = T_omnivore
+        self.R_omnivore_sight = R_omnivore_sight
         self.predator_entities = []
         self.herbivore_entities = []
         self.plant_entities = []
         self.static_entities = []
+        self.omnivore_entities = []
         self.all_entities = {entities.StaticEntity: self.static_entities,
                              entities.Predator: self.predator_entities,
                              entities.Herbivore: self.herbivore_entities,
-                             entities.Plant: self.plant_entities
+                             entities.Plant: self.plant_entities,
+                             entities.Omnivore: self.omnivore_entities
                              }
         self.grid = [[[] for _ in range(self.grid_size[0])] for _ in range(self.grid_size[1])]
 
@@ -44,16 +48,16 @@ class Simulation:
 
     def move_entities(self, entity_type):
         for entity in self.all_entities[entity_type]:
-            target_type = entity.target_type
-            entity.move(self.grid)
+            for target_type in entity.target_types:
+                entity.move(self.grid)
 
-            target = list(
-                ent for ent in self.grid[entity.position[0]][entity.position[1]] if isinstance(ent, target_type))
+                target = list(
+                    ent for ent in self.grid[entity.position[0]][entity.position[1]] if isinstance(ent, target_type))
 
-            if len(target) > 0:
-                self.all_entities[target_type].remove(target[0])
-                self.grid[entity.position[0]][entity.position[1]].remove(target[0])
-                entity.t_steps = entity.max_t_steps
+                if len(target) > 0:
+                    self.all_entities[target_type].remove(target[0])
+                    self.grid[entity.position[0]][entity.position[1]].remove(target[0])
+                    entity.t_steps = entity.max_t_steps
 
     def tick_entity(self, entity_type):
         for entity in self.all_entities[entity_type]:
@@ -115,11 +119,13 @@ def run_simulation():
 
         simulator.move_entities(entities.Predator)
         simulator.move_entities(entities.Herbivore)
+        simulator.move_entities(entities.Omnivore)
         simulator.reproduce()
         simulator.trampled_by()
 
         simulator.tick_entity(entities.Predator)
         simulator.tick_entity(entities.Herbivore)
+        simulator.tick_entity(entities.Omnivore)
         simulator.tick_entity(entities.Plant)
 
         simulator.plant_random()
@@ -132,7 +138,7 @@ def run_simulation():
 
 
 def seed_loader():
-    with open(f'config.yaml', 'r') as config:
+    with open(f'configTiny.yaml', 'r') as config:
         output = yaml.safe_load(config)
     simulator = Simulation([int(x) for x in output.get('grid_size', [1, 1])],
                            int(output.get('steps', 1)),
@@ -141,7 +147,9 @@ def seed_loader():
                            int(output.get('R_herbivore', 1)),
                            int(output.get('T_cooldown', 1)),
                            int(output.get('T_predator', 1)),
-                           int(output.get('R_predator_sight', 2)))
+                           int(output.get('R_predator_sight', 2)),
+                           int(output.get('T_omnivore', 1)),
+                           int(output.get('R_omnivore_sight', 1)))
     for entry in output.get('entities', []):
         entry_type = entry['type'].lower()
         position = tuple(int(cord) for cord in entry['position'])
@@ -155,6 +163,9 @@ def seed_loader():
                 entities.Herbivore(position, simulator.T_herbivore, simulator.R_herbivore_sight, simulator.T_cooldown))
         elif entry_type == 'plant':
             simulator.plant_entities.append(entities.Plant(position, simulator.T_plant))
+        elif entry_type == 'omnivore':
+            simulator.omnivore_entities.append(
+                entities.Omnivore(position, simulator.T_omnivore, simulator.R_omnivore_sight))
 
     return simulator
 

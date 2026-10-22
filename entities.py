@@ -16,10 +16,11 @@ class Entity(ABC):
 
 
 class MobileEntity(Entity):
-    def __init__(self, sprite, position, t_steps, r_range, target_type):
+    def __init__(self, sprite, position, t_steps, r_range, target_types):
         super().__init__(sprite, position, t_steps)
         self.r_range = r_range
-        self.target_type = target_type
+        self.target_types = target_types
+        self.has_moved_random = True
 
     @abstractmethod
     def move(self, grid):
@@ -38,6 +39,7 @@ class MobileEntity(Entity):
                     shortest_distance = distance
                     closest_neighbor = neighbor
             next_pos = add_cords(self.position, closest_neighbor)
+            self.has_moved_random = False
 
         else:
             rand_neighborhood = neighborhood.copy()
@@ -49,6 +51,7 @@ class MobileEntity(Entity):
                         and not any(isinstance(ent, StaticEntity) for ent in grid[new_position[0]][new_position[1]])):
                     next_pos = new_position
                     break
+            self.has_moved_random = True
         return next_pos
 
     def find_target(self, grid):
@@ -60,11 +63,12 @@ class MobileEntity(Entity):
             position = add_cords(neighbor, self.position)
             if 0 <= position[0] < len(grid) and 0 <= position[1] < len(grid[0]):
                 for entity in grid[position[0]][position[1]]:
-                    if isinstance(entity, self.target_type):
-                        distance = math.dist(self.position, position)
-                        if distance < closest_distance:
-                            closest_distance = distance
-                            closest_target = position
+                    for target_type in self.target_types:
+                        if isinstance(entity, target_type):
+                            distance = math.dist(self.position, position)
+                            if distance < closest_distance:
+                                closest_distance = distance
+                                closest_target = position
         return closest_target
 
 
@@ -76,7 +80,7 @@ class Plant(Entity):
 
 class Herbivore(MobileEntity):
     def __init__(self, position, t_steps, r_range, t_cooldown):
-        super().__init__('🐔', position, t_steps, r_range, Plant)
+        super().__init__('🐔', position, t_steps, r_range, [Plant])
         self.t_cooldown = t_cooldown
         self.max_cooldown = t_cooldown
 
@@ -88,7 +92,16 @@ class Herbivore(MobileEntity):
 
 class Predator(MobileEntity):
     def __init__(self, position, t_steps, r_range):
-        super().__init__('🦊', position, t_steps, r_range, Herbivore)
+        super().__init__('🦊', position, t_steps, r_range, [Herbivore])
+
+    def move(self, grid):
+        next_pos = self.get_next_pos(grid)
+        self.position = next_pos
+
+
+class Omnivore(MobileEntity):
+    def __init__(self, position, t_steps, r_range):
+        super().__init__('🐻', position, t_steps, r_range, [Herbivore, Predator, Plant])
 
     def move(self, grid):
         next_pos = self.get_next_pos(grid)
