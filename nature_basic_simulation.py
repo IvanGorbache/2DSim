@@ -172,7 +172,7 @@ def run_simulation():
 
 
 def seed_loader():
-    with open(f'configTiny.yaml', 'r') as config:
+    with open(f'config.yaml', 'r') as config:
         output = yaml.safe_load(config)
     simulator = Simulation([int(x) for x in output.get('grid_size', [1, 1])],
                            int(output.get('steps', 1)),
