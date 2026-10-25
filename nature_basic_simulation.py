@@ -1,6 +1,21 @@
 import yaml
 import entities
 import random
+import logging
+from abc import ABC, abstractmethod
+
+logger = logging.getLogger(__name__)
+
+
+class SimulatorObserver(ABC):
+    @abstractmethod
+    def update(self, data):
+        pass
+
+
+class SimulationAlertSystem(SimulatorObserver):
+    def update(self, data):
+        logger.info(data)
 
 
 class Simulation:
@@ -28,6 +43,14 @@ class Simulation:
                              entities.Omnivore: self.omnivore_entities
                              }
         self.grid = [[[] for _ in range(self.grid_size[0])] for _ in range(self.grid_size[1])]
+        self.observers = []
+
+    def add_observer(self, observer):
+        self.observers.append(observer)
+
+    def notify_observers(self, data):
+        for observer in self.observers:
+            observer.update(data)
 
     def place_entities(self):
         for entity_list in self.all_entities.values():
@@ -55,14 +78,20 @@ class Simulation:
                     ent for ent in self.grid[entity.position[0]][entity.position[1]] if isinstance(ent, target_type))
 
                 if len(target) > 0:
+                    if len(self.all_entities[target_type]) == 1:
+                        self.notify_observers("The last of the " + type(target[0]).__name__ + " has been consumed")
                     self.all_entities[target_type].remove(target[0])
                     self.grid[entity.position[0]][entity.position[1]].remove(target[0])
                     entity.t_steps = entity.max_t_steps
+                    if isinstance(entity, entities.Predator):
+                        self.notify_observers("A predator has eaten a herbivore")
 
     def tick_entity(self, entity_type):
         for entity in self.all_entities[entity_type]:
             entity.tick()
             if entity.t_steps <= 0:
+                if len(self.all_entities[entity_type]) == 1:
+                    self.notify_observers("The last of the " + type(entity).__name__ + " has been died of old age")
                 self.all_entities[entity_type].remove(entity)
 
     def plant_random(self):
@@ -72,6 +101,8 @@ class Simulation:
             if len(self.grid[position[0]][position[1]]) == 0:
                 self.all_entities[entities.Plant].append(entities.Plant(position, self.T_plant))
                 break
+        if len(self.plant_entities) > self.grid_size[0] * self.grid_size[1] * 0.9:
+            self.notify_observers("number of plants exceeds 90% of the grid space.")
 
     def reproduce(self):
         has_reproduced = False
@@ -112,6 +143,9 @@ class Simulation:
 def run_simulation():
     simulator = seed_loader()
 
+    alert_system = SimulationAlertSystem()
+    simulator.add_observer(alert_system)
+
     simulator.place_entities()
     simulator.print_grid()
     for i in range(simulator.steps):
@@ -138,7 +172,7 @@ def run_simulation():
 
 
 def seed_loader():
-    with open(f'configTiny.yaml', 'r') as config:
+    with open(f'config.yaml', 'r') as config:
         output = yaml.safe_load(config)
     simulator = Simulation([int(x) for x in output.get('grid_size', [1, 1])],
                            int(output.get('steps', 1)),
@@ -171,4 +205,7 @@ def seed_loader():
 
 
 if __name__ == '__main__':
+    logging.basicConfig(filename='simulation.log', level=logging.INFO)
+    logger.info('Started')
     run_simulation()
+    logger.info('Finished')
