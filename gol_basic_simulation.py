@@ -24,7 +24,9 @@ def grid_to_image_frame(grid: list[list[int]], scale: int) -> np.ndarray[Any, np
                 image[i, j] = BLACK
             else:
                 image[i, j] = WHITE
+
     scaled_image = np.repeat(np.repeat(image, scale, axis=0), scale, axis=1)
+
     return np.stack((scaled_image,) * COLOR_SPACE, axis=-1)
 
 
@@ -42,11 +44,13 @@ def start_sim(height: int, width: int, steps: int, x: int, y: int, input_file: s
     grid_seed(grid, x, y, input_file)
     print_grid(grid)
     frames = [grid_to_image_frame(grid, SCALE)]
+
     for i in range(steps):
         print("step: ", i)
         apply_update(grid, get_update(grid))
         print_grid(grid)
         frames.append(grid_to_image_frame(grid, SCALE))
+
     imageio.mimsave('simulation.gif', frames, fps=FPS, loop=0)
 
 
@@ -72,6 +76,7 @@ def get_update(grid: list[list[int]]) -> list[list[int]]:
 
             elif grid[i][j] == DEAD and counter == OPTIMAL_POPULATION:
                 update_grid[i][j] = REVIVE_UPDATE
+
     return update_grid
 
 
