@@ -1,4 +1,5 @@
 import sys
+from typing import Any
 
 import imageio
 import numpy as np
@@ -6,7 +7,7 @@ import numpy as np
 from consts import *
 
 
-def grid_to_image_frame(grid: list[list[int]], scale:int):
+def grid_to_image_frame(grid: list[list[int]], scale: int) -> np.ndarray[Any, np.dtype[Any]]:
     """
     Converts a grid frame into an image frame.
     :param scale: Scale factor for each pixel
@@ -36,7 +37,6 @@ def start_sim(height: int, width: int, steps: int, x: int, y: int, input_file: s
     :param steps: The number of simulation steps.
     :param x: The x coordinate of the initial position of the simulation seed
     :param y: The y coordinate of the initial position of the simulation seed
-    :return:
     """
     grid = [[0 for _ in range(width)] for _ in range(height)]
     grid_seed(grid, x, y, input_file)
@@ -90,7 +90,6 @@ def apply_update(grid: list[list[int]], update_grid: list[list[int]]):
     Applies the update grid to teh current grid to make the simulation step simultaneous across all grid cells.
     :param grid: The grid representing the current simulation state.
     :param update_grid: The grid used for updating the simulation state.
-    :return:
     """
     for i in range(len(grid)):
         for j in range(len(grid[i])):
@@ -101,7 +100,6 @@ def print_grid(grid: list[list[int]]):
     """
     Prints the current grid state.
     :param grid: The grid representing the current simulation state.
-    :return:
     """
     output = ""
     for i in range(len(grid)):
