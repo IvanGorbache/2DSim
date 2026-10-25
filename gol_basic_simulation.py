@@ -1,7 +1,9 @@
 import sys
-from consts import *
+
 import imageio
 import numpy as np
+
+from consts import *
 
 
 def grid_to_image_frame(grid: list[list[int]], scale:int):
@@ -25,9 +27,10 @@ def grid_to_image_frame(grid: list[list[int]], scale:int):
     return np.stack((scaled_image,) * COLOR_SPACE, axis=-1)
 
 
-def start_sim(height: int, width: int, steps: int, x: int, y: int):
+def start_sim(height: int, width: int, steps: int, x: int, y: int, input_file: str):
     """
     This function is responsible for the running of the simulation.
+    :param input_file:
     :param height: The height of the simulation grid.
     :param width: The width of the simulation grid.
     :param steps: The number of simulation steps.
@@ -36,7 +39,7 @@ def start_sim(height: int, width: int, steps: int, x: int, y: int):
     :return:
     """
     grid = [[0 for _ in range(width)] for _ in range(height)]
-    grid_seed(grid, x, y)
+    grid_seed(grid, x, y, input_file)
     print_grid(grid)
     frames = [grid_to_image_frame(grid, SCALE)]
     for i in range(steps):
@@ -111,16 +114,16 @@ def print_grid(grid: list[list[int]]):
     print(output)
 
 
-def grid_seed(grid: list[list[int]], x: int, y: int):
+def grid_seed(grid: list[list[int]], x: int, y: int, input_file: str):
     """
     Places the seed within the grid bounds based on the x and y coordinates of the upper left corner of the seed.
+    :param input_file: The file for the initial seed pattern
     :param grid: The grid representing the current simulation state.
     :param x: The x coordinate of the initial position of the simulation seed.
     :param y: The y coordinate of the initial position of the simulation seed.
-    :return:
     :raises: ValueError: If the seed cannot be placed within the grid bounds.
     """
-    with open("hammerhead.txt") as f:
+    with open(input_file) as f:
         pattern = f.read().splitlines()
 
         if len(grid) < len(pattern) + x or len(grid[0]) < len(pattern[0]) + y:
@@ -128,27 +131,28 @@ def grid_seed(grid: list[list[int]], x: int, y: int):
         else:
             for i in range(len(pattern)):
                 for j in range(len(pattern[i])):
-                    if pattern[i][j] == '1':
-                        grid[x][y + j] = 1
+                    if pattern[i][j] == LIVE_SEED_CELL:
+                        grid[x][y + j] = ALIVE
                     else:
-                        grid[x][y + j] = 0
+                        grid[x][y + j] = DEAD
                 x += 1
 
 
 if __name__ == '__main__':
-    sim_height = DEFAULT_GRID_HEIGHT
-    sim_width = DEFAULT_GRID_WIDTH
-    sim_steps = DEFAULT_STEPS
-    seed_x = SEED_CORD_X
-    seed_y = SEED_CORD_Y
-
     if len(sys.argv) == REQUIRED_ARGUMENTS:
         sim_height = int(sys.argv[HEIGHT_ARG])
         sim_width = int(sys.argv[WIDTH_ARG])
         sim_steps = int(sys.argv[STEPS_ARG])
         seed_x = int(sys.argv[SEED_X_ARG])
         seed_y = int(sys.argv[SEED_Y_ARG])
+        file = str(sys.argv[FILE_ARG])
     else:
         print("Missing parameters. Using default parameters")
+        sim_height = DEFAULT_GRID_HEIGHT
+        sim_width = DEFAULT_GRID_WIDTH
+        sim_steps = DEFAULT_STEPS
+        seed_x = SEED_CORD_X
+        seed_y = SEED_CORD_Y
+        file = DEFAULT_FILE
 
-    start_sim(sim_height, sim_width, sim_steps, seed_x, seed_y)
+    start_sim(sim_height, sim_width, sim_steps, seed_x, seed_y, file)
