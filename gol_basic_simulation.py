@@ -1,6 +1,28 @@
 import sys
-
 from consts import *
+import imageio
+import numpy as np
+
+
+def grid_to_image_frame(grid: list[list[int]], scale:int):
+    """
+    Converts a grid frame into an image frame.
+    :param scale: Scale factor for each pixel
+    :param grid: The grid representing the current simulation state.
+    :return: a frame of the current simulation state.
+    """
+    height = len(grid)
+    width = len(grid[0])
+    image = np.zeros((height, width), dtype=np.uint8)
+
+    for i in range(height):
+        for j in range(width):
+            if grid[i][j] == ALIVE:
+                image[i, j] = BLACK
+            else:
+                image[i, j] = WHITE
+    scaled_image = np.repeat(np.repeat(image, scale, axis=0), scale, axis=1)
+    return np.stack((scaled_image,) * COLOR_SPACE, axis=-1)
 
 
 def start_sim(height: int, width: int, steps: int, x: int, y: int):
@@ -16,10 +38,13 @@ def start_sim(height: int, width: int, steps: int, x: int, y: int):
     grid = [[0 for _ in range(width)] for _ in range(height)]
     grid_seed(grid, x, y)
     print_grid(grid)
+    frames = [grid_to_image_frame(grid, SCALE)]
     for i in range(steps):
         print("step: ", i)
         apply_update(grid, get_update(grid))
         print_grid(grid)
+        frames.append(grid_to_image_frame(grid, SCALE))
+    imageio.mimsave('simulation.gif', frames, fps=FPS, loop=0)
 
 
 def get_update(grid: list[list[int]]) -> list[list[int]]:
