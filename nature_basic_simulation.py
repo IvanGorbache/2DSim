@@ -1,8 +1,16 @@
+import copy
+import os
+
+import numpy as np
 import yaml
 import entities
 import random
 import logging
 from abc import ABC, abstractmethod
+import matplotlib
+
+matplotlib.use('TkAgg')
+import matplotlib.pyplot as plt
 
 logger = logging.getLogger(__name__)
 
@@ -44,6 +52,22 @@ class Simulation:
                              }
         self.grid = [[[] for _ in range(self.grid_size[0])] for _ in range(self.grid_size[1])]
         self.observers = []
+        self.entity_count = []
+        self.reproduction_count = []
+        self.consumption_count = {
+            entities.Predator: [],
+            entities.Herbivore: [],
+            entities.Omnivore: []
+        }
+        self.grid_history = []
+
+    def log_entity_count(self):
+        self.entity_count.append({
+            entities.Predator: len(self.predator_entities),
+            entities.Herbivore: len(self.herbivore_entities),
+            entities.Plant: len(self.plant_entities),
+            entities.Omnivore: len(self.omnivore_entities)
+        })
 
     def add_observer(self, observer):
         self.observers.append(observer)
@@ -58,7 +82,12 @@ class Simulation:
                 self.grid[entity.position[0]][entity.position[1]].append(entity)
 
     def clear_grid(self):
+        self.log_grid_traffic()
         self.grid = [[[] for _ in range(self.grid_size[0])] for _ in range(self.grid_size[1])]
+
+    def log_grid_traffic(self):
+        self.grid_history.append([[len(self.grid[i][j]) for i in range(self.grid_size[0])]
+                                  for j in range(self.grid_size[1])])
 
     def print_grid(self):
         for i in range(self.grid_size[0]):
@@ -70,6 +99,7 @@ class Simulation:
             print("")
 
     def move_entities(self, entity_type):
+        current_consumption = 0
         for entity in self.all_entities[entity_type]:
             for target_type in entity.target_types:
                 entity.move(self.grid)
@@ -85,6 +115,8 @@ class Simulation:
                     entity.t_steps = entity.max_t_steps
                     if isinstance(entity, entities.Predator):
                         self.notify_observers("A predator has eaten a herbivore")
+                    current_consumption += 1
+        self.consumption_count[entity_type].append(current_consumption)
 
     def tick_entity(self, entity_type):
         for entity in self.all_entities[entity_type]:
@@ -105,7 +137,7 @@ class Simulation:
             self.notify_observers("number of plants exceeds 90% of the grid space.")
 
     def reproduce(self):
-        has_reproduced = False
+        reproduction_count = 0
         for entity in self.herbivore_entities:
             target = next(
                 (ent for ent in self.grid[entity.position[0]][entity.position[1]] if isinstance(ent, type(entity))),
@@ -127,9 +159,9 @@ class Simulation:
                                                         self.T_cooldown)
                         self.grid[new_position[0]][new_position[1]].append(new_entity)
                         self.herbivore_entities.append(new_entity)
-                        has_reproduced = True
+                        reproduction_count += 1
                         break
-        return has_reproduced
+        return reproduction_count
 
     def trampled_by(self):
         for plant in self.plant_entities:
@@ -138,6 +170,63 @@ class Simulation:
                 None)
             if pred is not None:
                 self.plant_entities.remove(plant)
+
+    def log_reproduction_count(self, num_reproductions):
+        self.reproduction_count.append(num_reproductions)
+
+    def plot_entity_count(self):
+        plt.figure(figsize=(10, 6))
+        entity_classes = self.entity_count[0].keys()
+        for entity_class in entity_classes:
+            count = [step_dict.get(entity_class, 0) for step_dict in self.entity_count]
+            plt.plot(count, label=entity_class.__name__)
+        plt.tight_layout()
+        plt.legend(loc='upper right')
+        plt.xlabel('Simulation Steps', fontsize=12)
+        plt.title('Population over time', fontsize=10)
+        output_dir = "plots"
+        plt.savefig(os.path.join(output_dir, "population.png"), dpi=300)
+
+        plt.show()
+
+    def plot_reproduction_count(self):
+        plt.figure(figsize=(10, 6))
+        plt.plot(self.reproduction_count)
+        plt.tight_layout()
+        plt.xlabel('Simulation Steps', fontsize=12)
+        plt.title('reproduction over time', fontsize=10)
+        output_dir = "plots"
+        plt.savefig(os.path.join(output_dir, "reproduction.png"), dpi=300)
+
+        plt.show()
+
+    def plot_consumption_count(self):
+        plt.figure(figsize=(10, 6))
+        entity_classes = self.consumption_count.keys()
+        for entity_class in entity_classes:
+            count = self.consumption_count[entity_class]
+            plt.plot(count, label=entity_class.__name__)
+        plt.tight_layout()
+        plt.legend(loc='upper right')
+        plt.xlabel('Simulation steps', fontsize=12)
+        output_dir = "plots"
+        plt.savefig(os.path.join(output_dir, "consumption.png"), dpi=300)
+
+        plt.show()
+
+    def plot_grid_heatmap(self):
+        heatmap_data = np.zeros(self.grid_size)
+        for grid in self.grid_history:
+            for i in range(self.grid_size[0]):
+                for j in range(self.grid_size[1]):
+                    heatmap_data[i][j] += grid[i][j]
+        plt.figure(figsize=(8, 6))
+        plt.imshow(heatmap_data, cmap='hot', origin='lower', interpolation='nearest')
+        plt.colorbar(label='Traffic')
+        plt.title('Grid traffic', fontsize=10)
+        output_dir = "plots"
+        plt.savefig(os.path.join(output_dir, "traffic_heat.png"), dpi=300)
+        plt.show()
 
 
 def run_simulation():
@@ -154,7 +243,7 @@ def run_simulation():
         simulator.move_entities(entities.Predator)
         simulator.move_entities(entities.Herbivore)
         simulator.move_entities(entities.Omnivore)
-        simulator.reproduce()
+        num_reproductions = simulator.reproduce()
         simulator.trampled_by()
 
         simulator.tick_entity(entities.Predator)
@@ -169,6 +258,14 @@ def run_simulation():
         simulator.place_entities()
 
         simulator.print_grid()
+
+        simulator.log_entity_count()
+        simulator.log_reproduction_count(num_reproductions)
+
+    simulator.plot_entity_count()
+    simulator.plot_reproduction_count()
+    simulator.plot_consumption_count()
+    simulator.plot_grid_heatmap()
 
 
 def seed_loader():

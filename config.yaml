@@ -1,5 +1,5 @@
 grid_size: ['40', '40']
-steps: 50
+steps: 100
 T_plant: '10'
 T_herbivore: '5'
 R_herbivore_sight: '10'
