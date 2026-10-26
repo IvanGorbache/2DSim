@@ -1,0 +1,71 @@
+grid_size:
+  rows: 40
+  cols: 40
+
+simulation_steps: 30
+
+entities:
+  Herbivore:
+    args:
+      lifespan: 5
+      sight_range: 10
+      reproduction_cooldown: 5
+    initial_positions:
+      - [2, 2]
+      - [12, 14]
+      - [25, 8]
+      - [33, 35]
+      - [5, 28]
+      - [18, 32]
+      - [30, 15]
+      - [3, 12]
+      - [22, 25]
+      - [7, 38]
+      - [15, 3]
+      - [28, 19]
+      - [36, 27]
+      - [11, 22]
+      - [4, 16]
+
+  Predator:
+    args:
+      lifespan: 20
+      sight_range: 5
+    initial_positions:
+      - [0, 0]
+      - [20, 20]
+      - [38, 5]
+      - [10, 35]
+      - [5, 10]
+      - [32, 12]
+      - [17, 28]
+      - [25, 33]
+
+  Plant:
+    args:
+      lifespan: 10
+    initial_positions:
+      - [1, 1]
+      - [2, 1]
+      - [10, 11]
+      - [10, 12]
+      - [15, 25]
+      - [16, 25]
+      - [30, 30]
+      - [31, 30]
+
+  StaticEntity:
+    args: {}
+    initial_positions:
+      - [0, 2]
+      - [14, 14]
+      - [22, 5]
+      - [35, 12]
+
+  Omnivore:
+    args:
+      lifespan: 30
+      sight_range: 5
+    initial_positions:
+      - [2, 0]
+      - [19, 15]

@@ -1,0 +1,17 @@
+grid_size:
+  rows: 3
+  cols: 3
+
+simulation_steps: 25
+
+entities:
+  Herbivore:
+    args:
+      lifespan: 10
+      sight_range: 5
+      reproduction_cooldown: 3
+    initial_positions:
+      - [0,1]
+      - [1,1]
+      - [0,0]
+
