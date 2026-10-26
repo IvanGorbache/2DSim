@@ -1,8 +1,9 @@
 import sys
 
 import yaml
-import entities
 import random
+
+import entities
 
 
 class Simulation:

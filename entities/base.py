@@ -3,6 +3,8 @@ import math
 from abc import ABC, abstractmethod
 import random
 
+import entities
+
 
 class Entity(ABC):
     def __init__(self, sprite, position, t_steps):
@@ -48,7 +50,7 @@ class MobileEntity(Entity):
             for neighbor in rand_neighborhood:
                 new_position = add_cords(neighbor, self.position)
                 if (0 <= new_position[0] < len(grid) and 0 <= new_position[1] < len(grid[0])
-                        and not any(isinstance(ent, StaticEntity) for ent in grid[new_position[0]][new_position[1]])):
+                        and not any(isinstance(ent, entities.StaticEntity) for ent in grid[new_position[0]][new_position[1]])):
                     next_pos = new_position
                     break
             self.has_moved_random = True
@@ -70,48 +72,6 @@ class MobileEntity(Entity):
                                 closest_distance = distance
                                 closest_target = position
         return closest_target
-
-
-class Plant(Entity):
-    def __init__(self, position, t_steps):
-        super().__init__('🌱', position, t_steps)
-        self.trampled_by = Predator
-
-
-class Herbivore(MobileEntity):
-    def __init__(self, position, t_steps, r_range, t_cooldown):
-        super().__init__('🐔', position, t_steps, r_range, [Plant])
-        self.t_cooldown = t_cooldown
-        self.max_cooldown = t_cooldown
-
-    def move(self, grid):
-        next_pos = self.get_next_pos(grid)
-        self.position = next_pos
-        self.t_cooldown += 1
-
-
-class Predator(MobileEntity):
-    def __init__(self, position, t_steps, r_range):
-        super().__init__('🦊', position, t_steps, r_range, [Herbivore])
-
-    def move(self, grid):
-        next_pos = self.get_next_pos(grid)
-        self.position = next_pos
-
-
-class Omnivore(MobileEntity):
-    def __init__(self, position, t_steps, r_range):
-        super().__init__('🐻', position, t_steps, r_range, [Herbivore, Predator, Plant])
-
-    def move(self, grid):
-        next_pos = self.get_next_pos(grid)
-        self.position = next_pos
-
-
-class StaticEntity(Entity):
-    def __init__(self, position):
-        super().__init__(('🌲', '🗿', '⛰️')[random.randint(0, 2)], position, 0)
-
 
 def add_cords(cord1, cord2):
     return cord1[0] + cord2[0], cord1[1] + cord2[1]
