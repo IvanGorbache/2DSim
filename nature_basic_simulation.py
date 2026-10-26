@@ -1,8 +1,11 @@
-import yaml
-import entities
-import random
 import logging
+import random
+import sys
 from abc import ABC, abstractmethod
+
+import yaml
+
+import entities
 
 logger = logging.getLogger(__name__)
 
@@ -19,29 +22,11 @@ class SimulationAlertSystem(SimulatorObserver):
 
 
 class Simulation:
-    def __init__(self, grid_size, steps, T_plant, T_herbivore, R_herbivore_sight, T_cooldown, T_predator,
-                 R_predator_sight, T_omnivore, R_omnivore_sight):
+    def __init__(self, grid_size, steps, plant_lifespan=10):
         self.grid_size = grid_size
         self.steps = steps
-        self.T_plant = T_plant
-        self.T_herbivore = T_herbivore
-        self.R_herbivore_sight = R_herbivore_sight
-        self.T_cooldown = T_cooldown
-        self.T_predator = T_predator
-        self.R_predator_sight = R_predator_sight
-        self.T_omnivore = T_omnivore
-        self.R_omnivore_sight = R_omnivore_sight
-        self.predator_entities = []
-        self.herbivore_entities = []
-        self.plant_entities = []
-        self.static_entities = []
-        self.omnivore_entities = []
-        self.all_entities = {entities.StaticEntity: self.static_entities,
-                             entities.Predator: self.predator_entities,
-                             entities.Herbivore: self.herbivore_entities,
-                             entities.Plant: self.plant_entities,
-                             entities.Omnivore: self.omnivore_entities
-                             }
+        self.plant_lifespan = plant_lifespan
+
         self.grid = [[[] for _ in range(self.grid_size[0])] for _ in range(self.grid_size[1])]
         self.observers = []
 
@@ -52,13 +37,13 @@ class Simulation:
         for observer in self.observers:
             observer.update(data)
 
-    def place_entities(self):
-        for entity_list in self.all_entities.values():
-            for entity in entity_list:
-                self.grid[entity.position[0]][entity.position[1]].append(entity)
+        self.all_entities = []
 
-    def clear_grid(self):
-        self.grid = [[[] for _ in range(self.grid_size[0])] for _ in range(self.grid_size[1])]
+        self.grid = [[[] for _ in range(self.grid_size[1])] for _ in range(self.grid_size[0])]
+
+    def add_entity(self, entity_instance):
+        self.all_entities.append(entity_instance)
+        self.grid[entity_instance.position[0]][entity_instance.position[1]].append(entity_instance)
 
     def print_grid(self):
         for i in range(self.grid_size[0]):
@@ -69,75 +54,22 @@ class Simulation:
                     print("🟫", end="")
             print("")
 
-    def move_entities(self, entity_type):
-        for entity in self.all_entities[entity_type]:
-            for target_type in entity.target_types:
-                entity.move(self.grid)
-
-                target = list(
-                    ent for ent in self.grid[entity.position[0]][entity.position[1]] if isinstance(ent, target_type))
-
-                if len(target) > 0:
-                    if len(self.all_entities[target_type]) == 1:
-                        self.notify_observers("The last of the " + type(target[0]).__name__ + " has been consumed")
-                    self.all_entities[target_type].remove(target[0])
-                    self.grid[entity.position[0]][entity.position[1]].remove(target[0])
-                    entity.t_steps = entity.max_t_steps
-                    if isinstance(entity, entities.Predator):
-                        self.notify_observers("A predator has eaten a herbivore")
-
-    def tick_entity(self, entity_type):
-        for entity in self.all_entities[entity_type]:
-            entity.tick()
-            if entity.t_steps <= 0:
-                if len(self.all_entities[entity_type]) == 1:
-                    self.notify_observers("The last of the " + type(entity).__name__ + " has been died of old age")
-                self.all_entities[entity_type].remove(entity)
+    def simulate_entities(self, entity_type):
+        for entity in list(self.all_entities):
+            if isinstance(entity, entity_type):
+                entity.simulate_step(self.grid, self.all_entities)
 
     def plant_random(self):
-        positions = [(x, y) for x in range(len(self.grid)) for y in range(len(self.grid[0]))]
-        random.shuffle(positions)
-        for position in positions:
-            if len(self.grid[position[0]][position[1]]) == 0:
-                self.all_entities[entities.Plant].append(entities.Plant(position, self.T_plant))
-                break
-        if len(self.plant_entities) > self.grid_size[0] * self.grid_size[1] * 0.9:
-            self.notify_observers("number of plants exceeds 90% of the grid space.")
+        empty_cells = []
+        for i in range(self.grid_size[0]):
+            for j in range(self.grid_size[1]):
+                if len(self.grid[i][j]) == 0:
+                    empty_cells.append((i, j))
 
-    def reproduce(self):
-        has_reproduced = False
-        for entity in self.herbivore_entities:
-            target = next(
-                (ent for ent in self.grid[entity.position[0]][entity.position[1]] if isinstance(ent, type(entity))),
-                None)
-            if (target is not None and entity.t_cooldown >= entity.max_cooldown and entity.t_cooldown >=
-                    target.max_cooldown and target is not entity):
-                entity.t_cooldown = 0
-                target.t_cooldown = 0
-                neighborhood = [(1, 1), (1, 0), (1, -1), (0, 1), (0, -1), (-1, 1), (-1, 0)]
-                random.shuffle(neighborhood)
-                for neighbor in neighborhood:
-
-                    new_position = entities.add_cords(neighbor, entity.position)
-                    if (0 <= new_position[0] < len(self.grid) and 0 <= new_position[1] < len(self.grid[0])
-                            and not self.grid[new_position[0]][new_position[1]] and not any(
-                                isinstance(ent, entities.StaticEntity) for ent in
-                                self.grid[new_position[0]][new_position[1]])):
-                        new_entity = entities.Herbivore(new_position, self.T_herbivore, self.R_herbivore_sight,
-                                                        self.T_cooldown)
-                        self.grid[new_position[0]][new_position[1]].append(new_entity)
-                        self.herbivore_entities.append(new_entity)
-                        has_reproduced = True
-                        break
-        return has_reproduced
-
-    def trampled_by(self):
-        for plant in self.plant_entities:
-            pred = next(
-                (ent for ent in self.grid[plant.position[0]][plant.position[1]] if isinstance(ent, entities.Predator)),
-                None)
-            if pred is not None:
-                self.plant_entities.remove(plant)
+        if empty_cells:
+            pos = random.choice(empty_cells)
+            new_plant = entities.Plant(pos, self.plant_lifespan)
+            self.add_entity(new_plant)
 
 
 def run_simulation():
@@ -146,60 +78,76 @@ def run_simulation():
     alert_system = SimulationAlertSystem()
     simulator.add_observer(alert_system)
 
-    simulator.place_entities()
     simulator.print_grid()
     for i in range(simulator.steps):
-        print("step ", i)
+        print(f"step {i}")
 
-        simulator.move_entities(entities.Predator)
-        simulator.move_entities(entities.Herbivore)
-        simulator.move_entities(entities.Omnivore)
-        simulator.reproduce()
-        simulator.trampled_by()
-
-        simulator.tick_entity(entities.Predator)
-        simulator.tick_entity(entities.Herbivore)
-        simulator.tick_entity(entities.Omnivore)
-        simulator.tick_entity(entities.Plant)
+        simulator.simulate_entities(entities.Predator)
+        simulator.simulate_entities(entities.Herbivore)
+        simulator.simulate_entities(entities.Omnivore)
+        simulator.simulate_entities(entities.Plant)
 
         simulator.plant_random()
-
-        simulator.clear_grid()
-
-        simulator.place_entities()
 
         simulator.print_grid()
 
 
 def seed_loader():
-    with open(f'config.yaml', 'r') as config:
-        output = yaml.safe_load(config)
-    simulator = Simulation([int(x) for x in output.get('grid_size', [1, 1])],
-                           int(output.get('steps', 1)),
-                           int(output.get('T_plant', 1)),
-                           int(output.get('T_herbivore', 1)),
-                           int(output.get('R_herbivore', 1)),
-                           int(output.get('T_cooldown', 1)),
-                           int(output.get('T_predator', 1)),
-                           int(output.get('R_predator_sight', 2)),
-                           int(output.get('T_omnivore', 1)),
-                           int(output.get('R_omnivore_sight', 1)))
-    for entry in output.get('entities', []):
-        entry_type = entry['type'].lower()
-        position = tuple(int(cord) for cord in entry['position'])
-        if entry_type == 'static':
-            simulator.static_entities.append(entities.StaticEntity(position))
-        elif entry_type == 'predator':
-            simulator.predator_entities.append(
-                entities.Predator(position, simulator.T_predator, simulator.R_predator_sight))
-        elif entry_type == 'herbivore':
-            simulator.herbivore_entities.append(
-                entities.Herbivore(position, simulator.T_herbivore, simulator.R_herbivore_sight, simulator.T_cooldown))
-        elif entry_type == 'plant':
-            simulator.plant_entities.append(entities.Plant(position, simulator.T_plant))
-        elif entry_type == 'omnivore':
-            simulator.omnivore_entities.append(
-                entities.Omnivore(position, simulator.T_omnivore, simulator.R_omnivore_sight))
+    with open(sys.argv[1], 'r') as config_file:
+        output = yaml.safe_load(config_file)
+
+    g_size = output.get('grid_size', [40, 40])
+    if isinstance(g_size, dict):
+        grid_size = [int(g_size.get('rows', 40)), int(g_size.get('cols', 40))]
+    elif isinstance(g_size, (list, tuple)) and len(g_size) >= 2:
+        grid_size = [int(g_size[0]), int(g_size[1])]
+    else:
+        grid_size = [40, 40]
+
+    steps = output.get('simulation_steps', 30)
+
+    entities_data = output.get('entities', {})
+    plant_args = entities_data.get('Plant', {}).get('args', {})
+    plant_lifespan = plant_args.get('lifespan', 10)
+
+    simulator = Simulation(grid_size, steps, plant_lifespan)
+
+    ENTITY_MAP = {
+        'Herbivore': {
+            'cls': entities.Herbivore,
+            'arg_map': lambda args: (args.get('lifespan'), args.get('sight_range'), args.get('reproduction_cooldown'))
+        },
+        'Predator': {
+            'cls': entities.Predator,
+            'arg_map': lambda args: (args.get('lifespan'), args.get('sight_range'))
+        },
+        'Plant': {
+            'cls': entities.Plant,
+            'arg_map': lambda args: (args.get('lifespan'),)
+        },
+        'StaticEntity': {
+            'cls': entities.StaticEntity,
+            'arg_map': lambda args: ()
+        },
+        'Omnivore': {
+            'cls': entities.Omnivore,
+            'arg_map': lambda args: (args.get('lifespan'), args.get('sight_range'))
+        }
+    }
+
+    for entity_name, data in entities_data.items():
+        if entity_name not in ENTITY_MAP:
+            continue
+
+        config_info = ENTITY_MAP[entity_name]
+        entity_class = config_info['cls']
+        raw_args = data.get('args', {}) if data else {}
+        constructor_args = config_info['arg_map'](raw_args)
+
+        for pos in (data.get('initial_positions', []) if data else []):
+            position = tuple(pos)
+            instance = entity_class(position, *constructor_args)
+            simulator.add_entity(instance)
 
     return simulator
 
