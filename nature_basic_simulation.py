@@ -1,3 +1,5 @@
+import sys
+
 import yaml
 import entities
 import random
@@ -138,18 +140,18 @@ def run_simulation():
 
 
 def seed_loader():
-    with open(f'configTiny.yaml', 'r') as config:
+    with open(sys.argv[1], 'r') as config:
         output = yaml.safe_load(config)
-    simulator = Simulation([int(x) for x in output.get('grid_size', [1, 1])],
-                           int(output.get('steps', 1)),
-                           int(output.get('T_plant', 1)),
-                           int(output.get('T_herbivore', 1)),
-                           int(output.get('R_herbivore', 1)),
-                           int(output.get('T_cooldown', 1)),
-                           int(output.get('T_predator', 1)),
-                           int(output.get('R_predator_sight', 2)),
-                           int(output.get('T_omnivore', 1)),
-                           int(output.get('R_omnivore_sight', 1)))
+    simulator = Simulation([x for x in output.get('grid_size', [1, 1])],
+                           output.get('steps', 1),
+                           output.get('T_plant', 1),
+                           output.get('T_herbivore', 1),
+                           output.get('R_herbivore', 1),
+                           output.get('T_cooldown', 1),
+                           output.get('T_predator', 1),
+                           output.get('R_predator_sight', 2),
+                           output.get('T_omnivore', 1),
+                           output.get('R_omnivore_sight', 1))
     for entry in output.get('entities', []):
         entry_type = entry['type'].lower()
         position = tuple(int(cord) for cord in entry['position'])
