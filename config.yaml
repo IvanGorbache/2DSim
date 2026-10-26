@@ -1,104 +1,71 @@
-grid_size: [40, 40]
-steps: 30
-T_plant: 10
-T_herbivore: 5
-R_herbivore_sight: 10
-T_cooldown: 5
-T_predator: 20
-R_predator_sight: 5
-T_omnivore: 30
-R_omnivore_sight: 5
+grid_size:
+  rows: 40
+  cols: 40
+
+simulation_steps: 30
 
 entities:
-  - type: 'herbivore'
-    position: [2, 2]
-  - type: 'herbivore'
-    position: [12, 14]
-  - type: 'herbivore'
-    position: [25, 8]
-  - type: 'herbivore'
-    position: [33, 35]
-  - type: 'herbivore'
-    position: [5, 28]
-  - type: 'herbivore'
-    position: [18, 32]
-  - type: 'herbivore'
-    position: [30, 15]
-  - type: 'herbivore'
-    position: [3, 12]
-  - type: 'herbivore'
-    position: [22, 25]
-  - type: 'herbivore'
-    position: [7, 38]
-  - type: 'herbivore'
-    position: [15, 3]
-  - type: 'herbivore'
-    position: [28, 19]
-  - type: 'herbivore'
-    position: [36, 27]
-  - type: 'herbivore'
-    position: [11, 22]
-  - type: 'herbivore'
-    position: [4, 16]
+  Herbivore:
+    args:
+      lifespan: 5
+      sight_range: 10
+      reproduction_cooldown: 5
+    initial_positions:
+      - [2, 2]
+      - [12, 14]
+      - [25, 8]
+      - [33, 35]
+      - [5, 28]
+      - [18, 32]
+      - [30, 15]
+      - [3, 12]
+      - [22, 25]
+      - [7, 38]
+      - [15, 3]
+      - [28, 19]
+      - [36, 27]
+      - [11, 22]
+      - [4, 16]
 
-  - type: 'predator'
-    position: [0, 0]
-  - type: 'predator'
-    position: [20, 20]
-  - type: 'predator'
-    position: [38, 5]
-  - type: 'predator'
-    position: [10, 35]
-  - type: 'predator'
-    position: [5, 10]
-  - type: 'predator'
-    position: [32, 12]
-  - type: 'predator'
-    position: [17, 28]
-  - type: 'predator'
-    position: [25, 33]
+  Predator:
+    args:
+      lifespan: 20
+      sight_range: 5
+    initial_positions:
+      - [0, 0]
+      - [20, 20]
+      - [38, 5]
+      - [10, 35]
+      - [5, 10]
+      - [32, 12]
+      - [17, 28]
+      - [25, 33]
 
-  - type: 'plant'
-    position: [1, 1]
-  - type: 'plant'
-    position: [2, 1]
-  - type: 'plant'
-    position: [10, 11]
-  - type: 'plant'
-    position: [10, 12]
-  - type: 'plant'
-    position: [15, 25]
-  - type: 'plant'
-    position: [16, 25]
-  - type: 'plant'
-    position: [30, 30]
-  - type: 'plant'
-    position: [31, 30]
-  - type: 'plant'
-    position: [5, 5]
-  - type: 'plant'
-    position: [6, 5]
-  - type: 'plant'
-    position: [22, 12]
-  - type: 'plant'
-    position: [35, 22]
+  Plant:
+    args:
+      lifespan: 10
+    initial_positions:
+      - [1, 1]
+      - [2, 1]
+      - [10, 11]
+      - [10, 12]
+      - [15, 25]
+      - [16, 25]
+      - [30, 30]
+      - [31, 30]
 
-  - type: 'static'
-    position: [0, 2]
-  - type: 'static'
-    position: [14, 14]
-  - type: 'static'
-    position: [22, 5]
-  - type: 'static'
-    position: [35, 12]
-  - type: 'static'
-    position: [8, 30]
-  - type: 'static'
-    position: [3, 20]
-  - type: 'static'
-    position: [28, 38]
-  - type: 'static'
-    position: [19, 10]
+  StaticEntity:
+    args: {}
+    initial_positions:
+      - [0, 2]
+      - [14, 14]
+      - [22, 5]
+      - [35, 12]
 
-  - type: 'omnivore'
-    position: [ 2, 0 ]
+  Omnivore:
+    args:
+      lifespan: 30
+      sight_range: 5
+    initial_positions:
+      - [2, 0]
+      - [19, 15]
