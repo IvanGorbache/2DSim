@@ -14,7 +14,7 @@ class Predator(entities.MobileEntity):
         for entity in grid[self.position[0]][self.position[1]]:
             if isinstance(entity, entities.Plant):
                 grid[self.position[0]][self.position[1]].remove(entity)
-                all_entities.remove(entity)
+                all_entities[entities.Plant].remove(entity)
                 break
 
 

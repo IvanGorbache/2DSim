@@ -13,6 +13,7 @@ class Herbivore(entities.MobileEntity):
         self.t_cooldown += 1
         self.move(grid, all_entities)
         self.reproduce(grid, all_entities)
+        self.tick(grid, all_entities)
 
     def reproduce(self, grid, all_entities):
         has_reproduced = False
@@ -35,9 +36,8 @@ class Herbivore(entities.MobileEntity):
                     new_entity = entities.Herbivore(new_position, self.max_t_steps, self.r_range,
                                                     self.max_cooldown)
                     grid[new_position[0]][new_position[1]].append(new_entity)
-                    all_entities.append(new_entity)
+                    all_entities[entities.Herbivore].append(new_entity)
                     has_reproduced = True
-                    print("fuck")
                     break
 
         return has_reproduced

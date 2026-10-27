@@ -17,7 +17,7 @@ class Entity(ABC):
         self.t_steps -= 1
         if self.t_steps <= 0:
             grid[self.position[0]][self.position[1]].remove(self)
-            all_entities.remove(self)
+            all_entities[type(self)].remove(self)
 
     @abstractmethod
     def simulate_step(self, grid, all_entities):
@@ -71,10 +71,9 @@ class MobileEntity(Entity, ABC):
                 ent for ent in grid[self.position[0]][self.position[1]] if isinstance(ent, target_type))
 
             if len(target) > 0:
-                all_entities.remove(target[0])
+                all_entities[target_type].remove(target[0])
                 grid[self.position[0]][self.position[1]].remove(target[0])
                 self.t_steps = self.max_t_steps
-        return next_pos
 
     def find_target(self, grid):
         closest_target = None

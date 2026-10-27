@@ -1,7 +1,6 @@
 import logging
 import random
 import sys
-from abc import ABC, abstractmethod
 
 import yaml
 
@@ -10,39 +9,45 @@ import entities
 logger = logging.getLogger(__name__)
 
 
-class SimulatorObserver(ABC):
-    @abstractmethod
-    def update(self, data):
+class Observer:
+    def update(self, event_type: str, data: dict):
         pass
 
 
-class SimulationAlertSystem(SimulatorObserver):
-    def update(self, data):
-        logger.info(data)
+class SimulationObserver(Observer):
+    def update(self, event_type: str, data: dict):
+        print("alert")
 
 
 class Simulation:
     def __init__(self, grid_size, steps, plant_lifespan=10):
+        self.observers = []
+        self.extinct_notified = set()
+
         self.grid_size = grid_size
         self.steps = steps
         self.plant_lifespan = plant_lifespan
 
-        self.grid = [[[] for _ in range(self.grid_size[0])] for _ in range(self.grid_size[1])]
-        self.observers = []
-
-    def add_observer(self, observer):
-        self.observers.append(observer)
-
-    def notify_observers(self, data):
-        for observer in self.observers:
-            observer.update(data)
-
-        self.all_entities = []
+        self.all_entities = {
+            entities.Herbivore: [],
+            entities.Predator: [],
+            entities.Plant: [],
+            entities.StaticEntity: [],
+            entities.Omnivore: []
+        }
 
         self.grid = [[[] for _ in range(self.grid_size[1])] for _ in range(self.grid_size[0])]
 
+    def add_observer(self, observer: SimulationObserver):
+        self.observers.append(observer)
+
+    def notify_observers(self, event_type: str, data: dict):
+        for observer in self.observers:
+            observer.update(event_type, data)
+
     def add_entity(self, entity_instance):
-        self.all_entities.append(entity_instance)
+        entity_class = type(entity_instance)
+        self.all_entities.setdefault(entity_class, []).append(entity_instance)
         self.grid[entity_instance.position[0]][entity_instance.position[1]].append(entity_instance)
 
     def print_grid(self):
@@ -55,9 +60,8 @@ class Simulation:
             print("")
 
     def simulate_entities(self, entity_type):
-        for entity in list(self.all_entities):
-            if isinstance(entity, entity_type):
-                entity.simulate_step(self.grid, self.all_entities)
+        for entity in self.all_entities[entity_type]:
+            entity.simulate_step(self.grid, self.all_entities)
 
     def plant_random(self):
         empty_cells = []
@@ -74,10 +78,6 @@ class Simulation:
 
 def run_simulation():
     simulator = seed_loader()
-
-    alert_system = SimulationAlertSystem()
-    simulator.add_observer(alert_system)
-
     simulator.print_grid()
     for i in range(simulator.steps):
         print(f"step {i}")
@@ -86,7 +86,6 @@ def run_simulation():
         simulator.simulate_entities(entities.Herbivore)
         simulator.simulate_entities(entities.Omnivore)
         simulator.simulate_entities(entities.Plant)
-
         simulator.plant_random()
 
         simulator.print_grid()
