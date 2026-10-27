@@ -23,19 +23,33 @@ class Entity(ABC):
     def simulate_step(self, grid, all_entities):
         pass
 
+    @abstractmethod
+    def add_observer(self, observer):
+        pass
 
-class MobileEntity(Entity, ABC):
+    @abstractmethod
+    def notify_observer(self):
+        pass
+
+
+class MobileEntity(Entity):
     def __init__(self, sprite, position, t_steps, r_range, target_types):
         super().__init__(sprite, position, t_steps)
         self.r_range = r_range
         self.target_types = target_types
-        self.has_moved_random = True
 
     def simulate_step(self, grid, all_entities):
-        self.move(grid, all_entities)
+        self.move(grid)
+        self.consume(grid, all_entities)
         self.tick(grid, all_entities)
 
-    def move(self, grid, all_entities):
+    def add_observer(self, observer):
+        pass
+
+    def notify_observer(self):
+        pass
+
+    def move(self, grid):
         next_pos = self.position
         neighborhood = [(1, 1), (1, 0), (1, -1), (0, 1), (0, -1), (-1, 1), (-1, 0), (0, 0)]
         target = self.find_target(grid)
@@ -48,7 +62,6 @@ class MobileEntity(Entity, ABC):
                     shortest_distance = distance
                     closest_neighbor = neighbor
             next_pos = add_cords(self.position, closest_neighbor)
-            self.has_moved_random = False
 
         else:
             rand_neighborhood = neighborhood.copy()
@@ -61,11 +74,11 @@ class MobileEntity(Entity, ABC):
                             isinstance(ent, entities.StaticEntity) for ent in grid[new_position[0]][new_position[1]])):
                     next_pos = new_position
                     break
-            self.has_moved_random = True
         grid[self.position[0]][self.position[1]].remove(self)
         self.position = next_pos
         grid[self.position[0]][self.position[1]].append(self)
 
+    def consume(self, grid, all_entities):
         for target_type in self.target_types:
             target = list(
                 ent for ent in grid[self.position[0]][self.position[1]] if isinstance(ent, target_type))
@@ -74,6 +87,9 @@ class MobileEntity(Entity, ABC):
                 all_entities[target_type].remove(target[0])
                 grid[self.position[0]][self.position[1]].remove(target[0])
                 self.t_steps = self.max_t_steps
+                return True
+
+        return False
 
     def find_target(self, grid):
         closest_target = None

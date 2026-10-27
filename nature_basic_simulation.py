@@ -5,6 +5,7 @@ import sys
 import yaml
 
 import entities
+from const import *
 
 logger = logging.getLogger(__name__)
 
@@ -16,13 +17,23 @@ class Observer:
 
 class SimulationObserver(Observer):
     def update(self, event_type: str, data: dict):
-        print("alert")
+        if event_type == EXTINCT:
+            entity_class = data['entity_class']
+            msg = f"All entities of class {entity_class} have gone extinct."
+            logger.warning(msg)
+        elif event_type == CONSUMPTION:
+            msg = f"A predator has consumed a herbivore"
+            logger.warning(msg)
+        elif event_type == OVERGROWN:
+            msg = f"The number of plants exceeds 90% of the grid space."
+            logger.warning(msg)
 
 
 class Simulation:
     def __init__(self, grid_size, steps, plant_lifespan=10):
         self.observers = []
         self.extinct_notified = set()
+        self.notified_overgrown = False
 
         self.grid_size = grid_size
         self.steps = steps
@@ -49,6 +60,8 @@ class Simulation:
         entity_class = type(entity_instance)
         self.all_entities.setdefault(entity_class, []).append(entity_instance)
         self.grid[entity_instance.position[0]][entity_instance.position[1]].append(entity_instance)
+        for observer in self.observers:
+            entity_instance.add_observer(observer)
 
     def print_grid(self):
         for i in range(self.grid_size[0]):
@@ -75,6 +88,23 @@ class Simulation:
             new_plant = entities.Plant(pos, self.plant_lifespan)
             self.add_entity(new_plant)
 
+    def check_alerts(self):
+        tracked_classes = [entities.Herbivore, entities.Predator, entities.Omnivore, entities.Plant]
+        for entity_type in tracked_classes:
+            if len(self.all_entities.get(entity_type, [])) == 0:
+                if entity_type not in self.extinct_notified:
+                    self.notify_observers(EXTINCT, {"entity_class": entity_type})
+                    self.extinct_notified.add(entity_type)
+            elif entity_type in self.extinct_notified:
+                self.extinct_notified.remove(entity_type)
+
+        if self.grid_size[0] * self.grid_size[1] * 0.9 < len(self.all_entities[entities.Plant]):
+            if not self.notified_overgrown:
+                self.notify_observers(OVERGROWN, {})
+                self.notified_overgrown = True
+        else:
+            self.notified_overgrown = False
+
 
 def run_simulation():
     simulator = seed_loader()
@@ -89,6 +119,8 @@ def run_simulation():
         simulator.plant_random()
 
         simulator.print_grid()
+
+        simulator.check_alerts()
 
 
 def seed_loader():
@@ -110,6 +142,7 @@ def seed_loader():
     plant_lifespan = plant_args.get('lifespan', 10)
 
     simulator = Simulation(grid_size, steps, plant_lifespan)
+    simulator.add_observer(SimulationObserver())
 
     ENTITY_MAP = {
         'Herbivore': {

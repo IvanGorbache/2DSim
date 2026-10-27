@@ -9,3 +9,9 @@ class StaticEntity(entities.Entity):
 
     def simulate_step(self, grid, all_entities):
         pass
+
+    def add_observer(self, observer):
+        pass
+
+    def notify_observer(self):
+        pass

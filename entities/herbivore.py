@@ -11,7 +11,8 @@ class Herbivore(entities.MobileEntity):
 
     def simulate_step(self, grid, all_entities):
         self.t_cooldown += 1
-        self.move(grid, all_entities)
+        self.move(grid)
+        self.consume(grid, all_entities)
         self.reproduce(grid, all_entities)
         self.tick(grid, all_entities)
 

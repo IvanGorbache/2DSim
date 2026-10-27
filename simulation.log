@@ -1,30 +1,30 @@
 INFO:__main__:Started
-INFO:__main__:A predator has eaten a herbivore
-INFO:__main__:A predator has eaten a herbivore
-INFO:__main__:A predator has eaten a herbivore
-INFO:__main__:A predator has eaten a herbivore
-INFO:__main__:A predator has eaten a herbivore
-INFO:__main__:The last of the Herbivore has been died of old age
-INFO:__main__:The last of the Predator has been consumed
+WARNING:__main__:A predator has consumed a herbivore
+WARNING:__main__:All entities of class <class 'entities.herbivore.Herbivore'> have gone extinct.
+WARNING:__main__:All entities of class <class 'entities.omnivore.Omnivore'> have gone extinct.
+WARNING:__main__:All entities of class <class 'entities.predator.Predator'> have gone extinct.
+WARNING:__main__:The number of plants exceeds 90% of the grid space.
 INFO:__main__:Finished
 INFO:__main__:Started
-INFO:__main__:A predator has eaten a herbivore
-INFO:__main__:A predator has eaten a herbivore
-INFO:__main__:A predator has eaten a herbivore
-INFO:__main__:A predator has eaten a herbivore
-INFO:__main__:A predator has eaten a herbivore
-INFO:__main__:The last of the Herbivore has been died of old age
-INFO:__main__:The last of the Predator has been died of old age
+WARNING:__main__:A predator has consumed a herbivore
+WARNING:__main__:All entities of class <class 'entities.herbivore.Herbivore'> have gone extinct.
+WARNING:__main__:All entities of class <class 'entities.omnivore.Omnivore'> have gone extinct.
+WARNING:__main__:All entities of class <class 'entities.predator.Predator'> have gone extinct.
+WARNING:__main__:The number of plants exceeds 90% of the grid space.
 INFO:__main__:Finished
 INFO:__main__:Started
-INFO:__main__:Started
+WARNING:__main__:A predator has consumed a herbivore
+WARNING:__main__:All entities of class <class 'entities.herbivore.Herbivore'> have gone extinct.
+WARNING:__main__:All entities of class <class 'entities.omnivore.Omnivore'> have gone extinct.
+WARNING:__main__:All entities of class <class 'entities.predator.Predator'> have gone extinct.
+WARNING:__main__:The number of plants exceeds 90% of the grid space.
+WARNING:__main__:The number of plants exceeds 90% of the grid space.
+WARNING:__main__:The number of plants exceeds 90% of the grid space.
 INFO:__main__:Finished
 INFO:__main__:Started
-INFO:__main__:Finished
-INFO:__main__:Started
-INFO:__main__:Finished
-INFO:__main__:Started
-INFO:__main__:Finished
-INFO:__main__:Started
-INFO:__main__:Started
+WARNING:__main__:A predator has consumed a herbivore
+WARNING:__main__:All entities of class <class 'entities.herbivore.Herbivore'> have gone extinct.
+WARNING:__main__:All entities of class <class 'entities.omnivore.Omnivore'> have gone extinct.
+WARNING:__main__:All entities of class <class 'entities.predator.Predator'> have gone extinct.
+WARNING:__main__:The number of plants exceeds 90% of the grid space.
 INFO:__main__:Finished
