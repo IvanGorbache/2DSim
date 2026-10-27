@@ -1,19 +1,14 @@
 import logging
+import os
 import random
 import sys
 
-import copy
-import os
-
+import matplotlib
 import numpy as np
 import yaml
 
 import entities
 from const import *
-import random
-import logging
-from abc import ABC, abstractmethod
-import matplotlib
 
 matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
@@ -27,6 +22,10 @@ class Observer:
 
 
 class SimulationObserver(Observer):
+    def __init__(self):
+        self.reproduction_count = 0
+        self.consumption_count = 0
+
     def update(self, event_type: str, data: dict):
         if event_type == EXTINCT:
             entity_class = data['entity_class']
@@ -34,14 +33,22 @@ class SimulationObserver(Observer):
             logger.warning(msg)
         elif event_type == CONSUMPTION:
             msg = f"A predator has consumed a herbivore"
+            self.consumption_count += 1
             logger.warning(msg)
         elif event_type == OVERGROWN:
             msg = f"The number of plants exceeds 90% of the grid space."
+            logger.warning(msg)
+        elif event_type == REPRODUCTION:
+            msg = f"A herbivore has reproduced"
+            self.reproduction_count += 1
             logger.warning(msg)
 
 
 class Simulation:
     def __init__(self, grid_size, steps, plant_lifespan=10):
+        self.entity_count = []
+        self.reproduction_count = []
+        self.grid_history = []
         self.observers = []
         self.extinct_notified = set()
         self.notified_overgrown = False
@@ -58,6 +65,9 @@ class Simulation:
             entities.Omnivore: []
         }
 
+        self.consumption_count = []
+        self.grid_history = []
+
         self.grid = [[[] for _ in range(self.grid_size[1])] for _ in range(self.grid_size[0])]
 
     def add_observer(self, observer: SimulationObserver):
@@ -71,6 +81,7 @@ class Simulation:
         entity_class = type(entity_instance)
         self.all_entities.setdefault(entity_class, []).append(entity_instance)
         self.grid[entity_instance.position[0]][entity_instance.position[1]].append(entity_instance)
+
         for observer in self.observers:
             entity_instance.add_observer(observer)
 
@@ -120,8 +131,9 @@ class Simulation:
         else:
             self.notified_overgrown = False
 
-    def log_reproduction_count(self, num_reproductions):
-        self.reproduction_count.append(num_reproductions)
+    def log_reproduction_count(self):
+        self.reproduction_count.append(self.observers[0].reproduction_count)
+        self.observers[0].reproduction_count = 0
 
     def plot_entity_count(self):
         plt.figure(figsize=(10, 6))
@@ -151,13 +163,10 @@ class Simulation:
 
     def plot_consumption_count(self):
         plt.figure(figsize=(10, 6))
-        entity_classes = self.consumption_count.keys()
-        for entity_class in entity_classes:
-            count = self.consumption_count[entity_class]
-            plt.plot(count, label=entity_class.__name__)
+        plt.plot(self.consumption_count)
         plt.tight_layout()
-        plt.legend(loc='upper right')
-        plt.xlabel('Simulation steps', fontsize=12)
+        plt.xlabel('Simulation Steps', fontsize=12)
+        plt.title('consumption over time', fontsize=10)
         output_dir = "plots"
         plt.savefig(os.path.join(output_dir, "consumption.png"), dpi=300)
 
@@ -177,14 +186,22 @@ class Simulation:
         plt.savefig(os.path.join(output_dir, "traffic_heat.png"), dpi=300)
         plt.show()
 
+    def log_entity_count(self):
+        self.entity_count.append({
+            entities.Predator: len(self.all_entities[entities.Predator]),
+            entities.Herbivore: len(self.all_entities[entities.Herbivore]),
+            entities.Plant: len(self.all_entities[entities.Plant]),
+            entities.Omnivore: len(self.all_entities[entities.Omnivore])
+        })
+
+    def log_consumption_count(self):
+        self.consumption_count.append(self.observers[0].consumption_count)
+        self.observers[0].consumption_count = 0
+
 
 def run_simulation():
     simulator = seed_loader()
 
-    alert_system = SimulationAlertSystem()
-    simulator.add_observer(alert_system)
-
-    simulator.place_entities()
     simulator.print_grid()
     for i in range(simulator.steps):
         print(f"step {i}")
@@ -200,12 +217,18 @@ def run_simulation():
         simulator.check_alerts()
 
         simulator.log_entity_count()
-        simulator.log_reproduction_count(num_reproductions)
+
+        simulator.log_grid_traffic()
+
+        simulator.log_reproduction_count()
+
+        simulator.log_consumption_count()
 
     simulator.plot_entity_count()
     simulator.plot_reproduction_count()
     simulator.plot_consumption_count()
     simulator.plot_grid_heatmap()
+
 
 
 def seed_loader():

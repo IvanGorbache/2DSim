@@ -2,19 +2,31 @@ import random
 
 import entities
 
+from const import *
+
 
 class Herbivore(entities.MobileEntity):
     def __init__(self, position, t_steps, r_range, t_cooldown):
         super().__init__('🐔', position, t_steps, r_range, [entities.Plant])
         self.t_cooldown = t_cooldown
         self.max_cooldown = t_cooldown
+        self.reproduction_observer = []
+
+    def add_observer(self, observer):
+        self.reproduction_observer .append(observer)
 
     def simulate_step(self, grid, all_entities):
         self.t_cooldown += 1
         self.move(grid)
         self.consume(grid, all_entities)
-        self.reproduce(grid, all_entities)
+        if self.reproduce(grid, all_entities):
+            self.notify_observer()
+
         self.tick(grid, all_entities)
+
+    def notify_observer(self):
+        for observer in self.reproduction_observer:
+            observer.update(REPRODUCTION, {})
 
     def reproduce(self, grid, all_entities):
         has_reproduced = False

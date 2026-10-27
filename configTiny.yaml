@@ -12,13 +12,8 @@ entities:
       reproduction_cooldown: 3
     initial_positions:
       - [1,1]
+      - [1,2]
 
 
-  Predator:
-    args:
-      lifespan: 20
-      sight_range: 5
-    initial_positions:
-      - [ 0, 0 ]
 
 

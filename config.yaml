@@ -12,6 +12,8 @@ entities:
       reproduction_cooldown: 5
     initial_positions:
       - [2, 2]
+      - [2, 4]
+      - [2, 3]
       - [12, 14]
       - [25, 8]
       - [33, 35]
